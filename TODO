@@ -1,0 +1,27 @@
+List of things still to do
+
+// Tier 1 (Required)
+   -Implement physics world
+      Files: src/structures/Physics
+
+   -Change Winner, Scoreboard, and HUD then enable them
+      File: src/structures/Winner src/structures/Scoreboard src/structures/HUD
+
+   -Implement model loader using assimp
+      Files: src/structures/Object
+      --Build the table model
+         Files: data/models/table.mdl
+
+   -Keyboard/Mouse input
+      Files: src/opengl/keyboard src/opengl/mouse
+
+   -Menus
+      Files: src/opengl/menu
+
+// Tier 2 (Optional)
+   -Add options parsing
+      Files: data/options.cfg src/structures/Parameters
+
+   -Add texture loading with model loader
+      Files: ?
+
