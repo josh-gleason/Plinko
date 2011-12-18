@@ -79,11 +79,12 @@ void init( int& argc, char** argv )
          options.zNear, options.zFar);
 
    // set up initial camera position
-   options.camera = Camera(vec4(8.0,5.0,0.0,1.0), options.cam_mode);
-   options.camera.rotateHoriz(90);
-   options.camera.rotateVert(-35);
+   options.camera = Camera(vec4(0.0,-5.0,10.0,1.0), options.cam_mode);
+//   options.camera.rotateHoriz(90);
+//   options.camera.rotateVert(-35);
 
    // set up initial light position
+   options.light.m_position = vec3(0.0,-5.0,10);
    options.light_timerStep = 10;
    options.light_moveStep = 0.06;
 
@@ -95,6 +96,7 @@ void init( int& argc, char** argv )
    options.board = new Object("data/models/board.obj", 1.0, options.program);
    options.pegs = new Object("data/models/pegs.obj", 1.0, options.program);
    options.puck = new Object("data/models/puck.obj", 1.0, options.program);
+  
 
    // init buffers for models
    options.board->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
@@ -120,18 +122,10 @@ void init( int& argc, char** argv )
    
    // initialize physics engine
    options.physics.init( options.board->get_vertices(), options.board->num_verts() );
-
-}
-
-/******************************************************************************/
-/*                                  MAIN                                      */
-/******************************************************************************/
-int main( int argc, char **argv )
-{
-   srand(time(0));
-   parse_arguements( argc, argv, options );
-   init( argc, argv );
-
+   
+   /*********************************************/
+   /*              Finish GLUT init             */
+   /*********************************************/
    // initialize the pop-up menu structure
    init_menu();
 
@@ -147,6 +141,25 @@ int main( int argc, char **argv )
 
    glutTimerFunc( 17, timerHandle, 0);
 
+   std::vector<mat4> trans = options.physics.getPegTransforms();
+
+   for ( size_t i = 0; i < trans.size(); ++i )
+   {
+      options.temppegs.push_back(new Object("data/models/puck.obj", 0.5, options.program));
+      options.temppegs.back()->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
+      options.temppegs.back()->set_rotation( trans[i] );
+   }
+}
+
+/******************************************************************************/
+/*                                  MAIN                                      */
+/******************************************************************************/
+int main( int argc, char **argv )
+{
+   srand(time(0));
+   parse_arguements( argc, argv, options );
+   init( argc, argv );
+   
    cout << "================ Camera Controls ================" << endl
         << "============ (w,a,s,d,q,e) movement =============" << endl
         << " w - Move Forward          s - Move Backwards    " << endl

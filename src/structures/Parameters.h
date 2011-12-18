@@ -104,6 +104,8 @@ class Parameters{
       Object* pegs;
       Object* puck;
 
+      std::vector<Object*> temppegs;
+
       /*************************************/
       /*           Player Info             */
       /*************************************/

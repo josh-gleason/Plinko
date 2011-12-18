@@ -16,6 +16,9 @@ void display_function( void )
          options.pegs->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position); 
          options.puck->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position);
 
+         for ( size_t i = 0; i < options.temppegs.size(); ++i )
+            options.temppegs[i]->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position);
+         
          options.hud.draw_shape();
          break;
       
