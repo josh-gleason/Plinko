@@ -36,12 +36,12 @@ x
 
 InitParams::InitParams()
  : boardFriction(0.01f),
-   boardRestitution(0.2f),
+   boardRestitution(0.9f),
    pegFriction(0.01f),
-   pegRestitution(0.2f),
+   pegRestitution(0.9f),
    puckMass(2.0f),
    puckFriction(0.01f),
-   puckRestitution(0.2f)
+   puckRestitution(0.9f)
 {}
    
 Physics_Model::Physics_Model()
@@ -234,7 +234,7 @@ void Physics_Model::init( const vec4* boardVertices, const int boardVertexCount,
    {
       // build puck
       //m_puckShape = new btCylinderShapeZ(btVector3(0.185, 0.1, 0.185));   // XXX not sure which is correct
-      m_puckShape = new btCylinderShapeZ(btVector3(0.19, 0.19, 0.1));   // XXX not sure which is correct
+      m_puckShape = new btCylinderShapeZ(btVector3(0.17, 0.17, 0.1));   // XXX not sure which is correct
       //m_puckShape = new btCylinderShape(btVector3(0.08, 0.08, 0.08)); // XXX
       btVector3 localInertia(0.0, 0.0, 0.0);
       m_puckShape->calculateLocalInertia(m_parameters.puckMass, localInertia); 

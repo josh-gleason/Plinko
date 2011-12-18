@@ -140,15 +140,6 @@ void init( int& argc, char** argv )
    glutReshapeFunc( reshape );
 
    glutTimerFunc( 17, timerHandle, 0);
-
-   std::vector<mat4> trans = options.physics.getPegTransforms();
-
-   for ( size_t i = 0; i < trans.size(); ++i )
-   {
-      options.temppegs.push_back(new Object("data/models/puck.obj", 0.5, options.program));
-      options.temppegs.back()->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
-      options.temppegs.back()->set_rotation( trans[i] );
-   }
 }
 
 /******************************************************************************/

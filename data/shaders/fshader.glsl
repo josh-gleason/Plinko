@@ -20,7 +20,6 @@ uniform sampler2D texture;
 
 void main() 
 { 
-#if 0
    if ( drawmode == 0 )
    {
       // Normalize the input lighting vectors
@@ -47,9 +46,7 @@ void main()
    }
    else if ( drawmode == 1 )
    {
-#endif
       gl_FragColor = diffuse;
-#if 0
    }
    else{
       gl_FragColor = texture2D( texture, texCoord );
@@ -57,6 +54,5 @@ void main()
       float avg_color = (gl_FragColor.x+gl_FragColor.y+gl_FragColor.z)/3.0;
       gl_FragColor.w = 1.0-avg_color;
    }
-#endif
 } 
 
