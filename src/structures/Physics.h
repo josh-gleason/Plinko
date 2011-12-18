@@ -7,97 +7,115 @@
 // Was trying to use this for triangle paddle
 //#include <bullet/BulletCollision/Gimpact/btGImpactShape.h>
 
-#include "vec.h"
+#include <vector>
+
 #include "Object.h"
+
+// ../math
+#include "vec.h"
+#include "mat.h"
+
+struct InitParams{
+      InitParams();
+
+      // XXX shallow copy is okay
+
+      // assumes location on the Z-coord is zero
+      // initial puck position
+      vec2 puckPos;
+
+      // geometric properties of object MODELS
+      vec2  splineWidthHeight;  // width=x height=y
+      vec2  boardWidthHeight;   // width=x height=y
+      float puckDiameter;
+      float pegDiameter;
+
+      // static (mass = 0)
+      btScalar boardFriction;
+      btScalar boardRestitution;
+
+      // static (mass = 0)
+      btScalar pegFriction;
+      btScalar pegRestitution;
+
+      // static (mass = 0)
+      btScalar splineFriction;
+      btScalar splineRestitution;
+      
+      btScalar puckMass;
+      btScalar puckFriction;
+      btScalar puckRestitution;
+};
 
 class Physics_Model{
    
-   public:
-      
+   public: 
       Physics_Model();
       ~Physics_Model(); 
-      void init( vec3 const& boardSize, vec2 const& puckSize, vec2 const& paddle1Size, vec2 const& paddle2Size, 
-                 vec3 const& boardCent, vec3 const& puckCent, vec3 const& paddle1Cent, vec3 const& paddle2Cent,
-                 vec4 const* board_points,  const size_t num_boardPoints,      
-                 vec4 const* puck_points,   const size_t num_puckPoints,      
-                 vec4 const* paddle_points, const size_t num_paddlePoints);      
 
-      Object* tri1_walls;
-      Object* tri2_walls;
-
-      btCollisionShape* boardShape;
-      btCollisionShape* puckShape;
-      btCollisionShape* paddle1Shape;
-      btCollisionShape* paddle2Shape;
-
-      btCollisionShape* paddle1Circle;
-      btCollisionShape* paddle2Circle;
-      btCollisionShape* paddle1Square;
-      btCollisionShape* paddle2Square;
-      btCollisionShape* paddle1Triangle;
-      btCollisionShape* paddle2Triangle;
-
-      btRigidBody* puckRigidBody;
-      btRigidBody* boardRigidBody;
-      btRigidBody* paddle1RigidBody;
-      btRigidBody* paddle2RigidBody;
-      btDiscreteDynamicsWorld* dynamicsWorld;
+      void stepSimulation(btScalar time);
      
-      btGeneric6DofConstraint *puckXZplaneConstraint;
-      btGeneric6DofConstraint *pdl1XZplaneConstraint;
-      btGeneric6DofConstraint *pdl2XZplaneConstraint;
+      void init(const InitParams& params = InitParams());
 
-      btTransform puck_trans;
-      btTransform paddle1_trans;
-      btTransform paddle2_trans;
+      vec3 getPuckTranslation() const;
+      vec3 getBoardTranslation() const;
+      std::vector<vec3> getPegTranslations() const;
+      std::vector<vec3> getSplineTranslations() const;
+
+      vec3 getPuckRotation() const;
+      vec3 getBoardRotation() const;
+      std::vector<vec3> getPegRotations() const;
+      std::vector<vec3> getSplineRotations() const;
+
+      vec3 getPuckScale() const;
+      vec3 getBoardScale() const;
+      std::vector<vec3> getPegScales() const;
+      std::vector<vec3> getSplineScales() const;
+
+      mat4 getPuckTransform() const;
+      mat4 getBoardTransform() const;
+      std::vector<mat4> getPegTranforms() const;
+      std::vector<mat4> getSplineTransforms() const;
       
-      vec3 puck_pre_motion;
-      vec3 paddle1_pre_motion;
-      vec3 paddle2_pre_motion;
-      vec3 puck_post_motion;
-      vec3 paddle1_post_motion;
-      vec3 paddle2_post_motion;
+      // only able to change dynamic objects (so only the puck)
+      void setPuckTranslation(const vec3& trans);
+      void setPuckRotation(const vec3& rot);
+   protected:
+
+      /*************************************************************/
+      /*                       Physics Base                        */
+      /*************************************************************/
+      btDefaultCollisionConfiguration     *m_collisionConfiguration;
+      btCollisionDispatcher               *m_dispatcher;
+      btBroadphaseInterface               *m_broadphase;
+      btSequentialImpulseConstraintSolver *m_solver;
+      btDiscreteDynamicsWorld             *m_dynamicsWorld;
+
+      /*************************************************************/
+      /*                          Bodies                           */
+      /*************************************************************/
+      // holds a list of all items in the world
+      btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
+
+      // Note: Splines make up the boarders and seperate prize cubbys.
+
+      btCollisionShape                    *m_board;   // static
+      btCollisionShape                    *m_peg;     // static
+      btCollisionShape                    *m_spline;  // static
+      btCollisionShape                    *m_puck;    // dynamic
+
+      btTransform                         m_boardTransform;
+      std::vector<btTransform>            m_pegTransforms;
+      std::vector<btTransform>            m_splines;
+      btTransform                         m_puckTransform;
+
+      btGeneric6DofConstraint             *m_puckXYplaneConstraint;
+
+      /************************************************************/
+      /*                         Parameters                       */
+      /************************************************************/
       
-      ///collision configuration contains default setup for memory, collision setup.
-      btDefaultCollisionConfiguration* collisionConfiguration;
-
-      ///use the default collision dispatcher. 
-      btCollisionDispatcher* dispatcher;
-
-      ///btDbvtBroadphase is a good general purpose broadphase. 
-      btBroadphaseInterface* overlappingPairCache;
-
-      ///the default constraint solver. 
-      btSequentialImpulseConstraintSolver* solver;
-
-      btDefaultMotionState* boardMotionState;
-      btDefaultMotionState* puckMotionState;
-      btDefaultMotionState* paddle1MotionState;
-      btDefaultMotionState* paddle2MotionState;
-
-      btScalar board_friction;
-      btScalar board_restitution;
-
-      btScalar pdl_mass;
-      btScalar pdl_friction;
-      btScalar pdl_restitution;
-      
-      btScalar puck_mass;
-      btScalar puck_friction;
-      btScalar puck_restitution;
-
-      int shift_z_pos1;
-      int shift_z_neg1;
-      int shift_z_pos2;
-      int shift_z_neg2;
-      int shift_x_pos1;
-      int shift_x_neg1;
-      int shift_x_pos2;
-      int shift_x_neg2;
-
-      int action;
+      InitParams m_parameters;
 };
-
-void paddleTimer(int value);
 
 #endif

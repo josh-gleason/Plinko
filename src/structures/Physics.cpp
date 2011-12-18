@@ -1,98 +1,125 @@
 #include "Physics.h"
 
-Physics_Model::Physics_Model(){
+// TODO: Check the geometric properties against the models,
+//       they should match otherwise collisions won't match
+//       what is being displayed. The geometric properties
+//       are used when building the transformations that need
+//       to be passed to the objects for displaying.
+InitParams::InitParams()
+ : puckPos(0.f,0.f),
+   splineWidthHeight(1.f,1.f),
+   boardWidthHeight(10.f,10.f),
+   puckDiameter(1.f),
+   pegDiameter(1.f),
+   boardFriction(0.01f),
+   boardRestitution(0.01f),
+   pegFriction(0.01f),
+   pegRestitution(0.9f),
+   splineFriction(0.01f),
+   splineRestitution(0.9f),
+   puckMass(7.0f),
+   puckFriction(0.01f),
+   puckRestitution(0.9f)
+{}
    
-   shift_x_pos1 = 0;
-   shift_x_neg1 = 0;
-   shift_x_pos2 = 0;
-   shift_x_neg2 = 0;
-   shift_z_pos1 = 0;
-   shift_z_neg1 = 0;
-   shift_z_pos2 = 0;
-   shift_z_neg2 = 0;
-
-   action = 0;
-
-   puck_mass = 7.0;
-   puck_friction = 0.01;
-   puck_restitution = 0.9;
-
-   pdl_mass = 15.0;
-   pdl_friction = 0.01;
-   pdl_restitution = 0.9;
-
-   board_friction = 0.5;
-   board_restitution = 0.9;
-   
-   tri1_walls = NULL;
-   tri2_walls = NULL;
-
-   boardShape = NULL;
-   puckShape = NULL;
-   paddle1Shape = NULL;
-   paddle2Shape = NULL;
-   paddle1Circle = NULL;
-   paddle2Circle = NULL;
-   paddle1Square = NULL;
-   paddle2Square = NULL;
-   paddle1Triangle = NULL;
-   paddle2Triangle = NULL;
-   puckRigidBody = NULL;
-   boardRigidBody = NULL;
-   paddle1RigidBody = NULL;
-   paddle2RigidBody = NULL;
-   puckXZplaneConstraint = NULL;
-   pdl1XZplaneConstraint = NULL;
-   pdl2XZplaneConstraint = NULL;
-   collisionConfiguration = NULL;
-   dispatcher = NULL;
-   overlappingPairCache = NULL;
-   solver = NULL;
-   boardMotionState = NULL;
-   puckMotionState = NULL;
-   paddle1MotionState = NULL;
-   paddle2MotionState = NULL;
-   dynamicsWorld = NULL;
-}
+Physics_Model::Physics_Model()
+ : m_collisionConfiguration(NULL),
+   m_dispatcher(NULL),
+   m_broadphase(NULL),
+   m_solver(NULL),
+   m_dynamicsWorld(NULL),
+   m_board(NULL),
+   m_peg(NULL),
+   m_spline(NULL),
+   m_puck(NULL),
+   m_puckXYplaneConstraint(NULL)
+{}
 
 Physics_Model::~Physics_Model()
 {
-   if ( tri1_walls ) delete tri1_walls;
-   if ( tri2_walls ) delete tri2_walls;
+   // remove the rigidbodies from the dynamics world and
+   // delete them and their motion states
+   if ( m_dynamicsWorld ) {
+      for ( int i = m_dynamicsWorld->getNumCollisionObjects()-1; i >= 0; --i ) {
+         btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
+         btRigidBody* body = btRigidBody::upcast(obj);
+         if ( body && body->getMotionState() )
+            delete body->getMotionState();
+         m_dynamicsWorld->removeCollisionObject(obj);
+         delete obj;
+      }
+   }
 
-   if ( boardShape ) delete boardShape;
-   if ( puckShape )  delete puckShape;
-   //  delete [] paddle1Shape;   // these are pointers to other memory
-   //  delete [] paddle2Shape;
-   if ( paddle1Circle )  delete paddle1Circle;
-   if ( paddle2Circle )  delete paddle2Circle;
-   if ( paddle1Square)   delete paddle1Square;
-   if ( paddle2Square)   delete paddle2Square;
-   if ( paddle1Triangle) delete paddle1Triangle;
-   if ( paddle2Triangle) delete paddle2Triangle;
+   // delete collision shapes (assumes all shapes were pushed to m_collisionShapes
+   for ( int j = 0; j < m_collisionShapes.size(); ++j )
+   {
+      btCollisionShape* shape = m_collisionShapes[j];
+      m_collisionShapes[j] = 0;
+      delete shape;
+   }
 
-   if ( puckRigidBody ) delete puckRigidBody;
-   if ( boardRigidBody ) delete boardRigidBody;
-   if ( paddle1RigidBody ) delete paddle1RigidBody;
-   if ( paddle2RigidBody ) delete paddle2RigidBody;
+   if ( m_dynamicsWorld ) delete m_dynamicsWorld;
+   if ( m_solver ) delete m_solver;
+   if ( m_broadphase ) delete m_broadphase;
+   if ( m_dispatcher ) delete m_dispatcher;
+   if ( m_collisionConfiguration ) delete m_collisionConfiguration;
 
-   if ( puckXZplaneConstraint ) delete puckXZplaneConstraint;
-   if ( pdl1XZplaneConstraint ) delete pdl1XZplaneConstraint;
-   if ( pdl2XZplaneConstraint ) delete pdl2XZplaneConstraint;
+   m_collisionShapes.clear();
 
-   if ( collisionConfiguration ) delete collisionConfiguration;
-   if ( dispatcher ) delete dispatcher;
-   if ( overlappingPairCache ) delete overlappingPairCache;
-   if ( solver ) delete solver;
-   
-   if ( boardMotionState ) delete boardMotionState;
-   if ( puckMotionState ) delete puckMotionState;
-   if ( paddle1MotionState ) delete paddle1MotionState;
-   if ( paddle2MotionState ) delete paddle2MotionState;
-   
-   // deleting dynamics world breaks things
+   if ( m_puckXYplaneConstraint ) delete m_puckXYplaneConstraint;
 }
 
+void Physics_Model::init( const InitParams& parameters )
+{
+   m_parameters = parameters;
+   
+   /******************************************/
+   /*       General Physics Environment      */
+   /******************************************/
+   //create options (leave as default)
+   m_collisionConfiguration = new btDefaultCollisionConfiguration();
+
+   //create collision checker
+   m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+
+   //create Broadphase collision checker
+   m_broadphase = new btDbvtBroadphase();
+
+   //the default constraint solver. (leave as default)
+   m_solver = new btSequentialImpulseConstraintSolver;
+
+   //create dynamic environment 
+   m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
+
+   //set value of gravity
+   m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+
+   /********************************************/
+   /*                  Bodies                  */
+   /********************************************/
+
+   /// board ///
+   {
+
+   }
+
+   /// pegs ///
+   {
+
+   }
+
+   /// splines ///
+   {
+
+   }
+
+   /// puck ///
+   {
+
+   }
+}
+
+#if 0
 void Physics_Model::init( vec3 const& boardSize, vec2 const& puckSize, vec2 const& paddle1Size, vec2 const& paddle2Size, 
                           vec3 const& boardCent, vec3 const& puckCent, vec3 const& paddle1Cent, vec3 const& paddle2Cent, 
                           vec4 const* board_points,  const size_t num_boardPoints, 
@@ -106,7 +133,7 @@ void Physics_Model::init( vec3 const& boardSize, vec2 const& puckSize, vec2 cons
    collisionConfiguration = new btDefaultCollisionConfiguration();
 
    //create collision checker
-   dispatcher = new	btCollisionDispatcher(collisionConfiguration);
+   dispatcher = new btCollisionDispatcher(collisionConfiguration);
 
    //create Broadphase collision checker
    overlappingPairCache = new btDbvtBroadphase();
@@ -354,4 +381,4 @@ void Physics_Model::init( vec3 const& boardSize, vec2 const& puckSize, vec2 cons
 
 
 }
-
+#endif
