@@ -349,10 +349,15 @@ void Physics_Model::setPuckTranslation(const vec3& trans)
    m_puckTransform = m_puckRigidBody->getCenterOfMassTransform();
 }
 
-void Physics_Model::adjPuckTranslation( const vec3& trans ){
-
-
-
+void Physics_Model::adjPuckTranslation(const vec3& trans)
+{
+   m_puckRigidBody->setCenterOfMassTransform(
+      btTransform(
+         m_puckTransform.getRotation(),
+         m_puckTransform.getOrigin()+btVector3(trans.x,trans.y,trans.z)));
+   
+   // update puckTransform
+   m_puckTransform = m_puckRigidBody->getCenterOfMassTransform();
 }
 
 void Physics_Model::setPuckRotation(const vec3& rot)

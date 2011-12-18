@@ -55,6 +55,7 @@ class Physics_Model{
       // only able to change dynamic objects (so only the puck)
       void setPuckTranslation(const vec3& trans);
       void setPuckRotation(const vec3& rot);
+      
       void adjPuckTranslation(const vec3& trans);
 
       std::vector<mat4> getPegTransforms() const;
