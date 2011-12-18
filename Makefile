@@ -47,11 +47,7 @@ OBJECT_NAMES  = $(CORE)/parser \
                 $(OPENGL)/timer \
                 $(OPENGL)/reshape \
                 $(OPENGL)/menu \
-                $(MODELLOADER)/list \
-                $(MODELLOADER)/string_extra \
-                $(MODELLOADER)/obj_parser \
-                $(MODELLOADER)/print_data \
-                $(MODELLOADER)/objLoader
+                $(MODELLOADER)/assimp_utilities
 
 ######################### SETTINGS VARIABLES ###################################
 

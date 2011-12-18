@@ -5,7 +5,7 @@
 #include "mat.h"
 #include "GL.h"
 
-#include "objLoader.h"
+#include "assimp_utilities.h"
 
 #include <string>
 
@@ -18,8 +18,6 @@ class Object{
       Object( const string& fname, const double& sf, const GLuint prog);
       ~Object();
 
-      void make_empty();
-         
       void init_buffers( const vec4& lpos, const vec4& l_amb, const vec4& l_dif, const vec4& l_spec, bool load_shader=true, int rotate=0 );
 
       void draw_shape( mat4 const& worldviewMat, mat4 const& proj, vec4 const& l_pos );
@@ -49,8 +47,6 @@ class Object{
       // defined before drawing so shader knows how to handle vertices
       enum SHAD_DRAW_MODE {TRIANGLES=0, LINES=1};
 
-      void build_arrays( const vec4& lpos, const vec4& l_amb, const vec4& l_dif, const vec4& l_spec );
-      
       // attribute types
       GLuint vAngle;
       GLuint Scale;
@@ -72,18 +68,17 @@ class Object{
       GLuint rotation_id;
 
       string model_name;
-      objLoader model_data;
 
       GLuint vertex_count;    /*< Number of vertices in object */
       GLuint vertices_size;   /*< Size of single vertex array */
       GLuint shininess_size;  /*< Size of shininess array */
       
-      vec4 * vertices;
-      vec4 * normals;
-      vec4 * ambients;
-      vec4 * diffuses;
-      vec4 * speculars;
-      GLfloat* shininess;
+      vector<vec4> vertices;
+      vector<vec4> normals;
+      vector<vec4> ambients;
+      vector<vec4> diffuses;
+      vector<vec4> speculars;
+      vector<GLfloat> shininess;
 
       vec4 translation;
       mat4 rotation;

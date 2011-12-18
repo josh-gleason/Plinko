@@ -9,76 +9,39 @@ Object::Object( const string& fname, const double& sf, const GLuint prog ){
    scale_factor = sf;
    model_name = fname;
    velocity = vec4(0.0,0.0,0.0,1.0);
-   vertices = NULL;
-   normals  = NULL;
-   ambients = NULL;
-   diffuses = NULL;
-   speculars= NULL;
-   shininess= NULL;
 
 }
 
 Object::~Object(){
-   
-   make_empty();
 
 }
-
-void Object::make_empty(){
-   if( vertices != NULL )
-      delete [] vertices;
-   if( normals != NULL )
-      delete [] normals;
-   if( ambients != NULL )
-      delete [] ambients;
-   if( diffuses != NULL )
-      delete [] diffuses;
-   if( speculars != NULL )
-      delete [] speculars;
-   if( shininess != NULL )
-      delete [] shininess;
-}
-
 
 void Object::init_buffers( const vec4& lpos, const vec4& l_amb, const vec4& l_diff, const vec4& l_spec, bool load_shader, int rotate){
 
-
-   //load data from model
-   model_data.load(model_name.c_str());
-
-   //load model sizes
-   vertex_count = model_data.faceCount*3;
+   vector<GLfloat> shins;
    
-   radians = rotate * M_PI / 180.0;
+   //build rotation matrix
+   double radians = rotate * M_PI / 180.0;
+   mat4 rotation(cos(radians),  0.0, sin(radians), 0.0,
+               0.0,           1.0, 0.0,          0.0,
+               -sin(radians), 0.0, cos(radians), 0.0,
+               0.0,           0.0, 0.0,          1.0);
    
-   //compute shininess and vertex array size
-#ifdef DEBUG_DRAW_NORMALS
-   vertices_size = sizeof(vec4)*vertex_count*3;
-   shininess_size = sizeof(GLfloat)*vertex_count*3;
-   
-   //assign memory to arrays
-   vertices  = new vec4[vertex_count*3];
-   normals   = new vec4[vertex_count*3];
-   ambients  = new vec4[vertex_count*3];
-   diffuses  = new vec4[vertex_count*3];
-   speculars = new vec4[vertex_count*3];
-   shininess = new GLfloat[vertex_count*3];
-#else
+   //load vbo array data
+   Load_Model_Data( model_name, rotation, scale_factor, vertices, normals, ambients, diffuses, speculars, shins, vertex_count );
    vertices_size = sizeof(vec4)*vertex_count;
    shininess_size = sizeof(GLfloat)*vertex_count;
    
-   //assign memory to arrays
-   vertices  = new vec4[vertex_count];
-   normals   = new vec4[vertex_count];
-   ambients  = new vec4[vertex_count];
-   diffuses  = new vec4[vertex_count];
-   speculars = new vec4[vertex_count];
-   shininess = new GLfloat[vertex_count];
-#endif
+   /*************************************************/
+   /*    Iterate through materials, multiplying the */
+   /*    light material to the material.            */
+   /*************************************************/
+   for(size_t i=0; i<vertex_count; i++){
+      ambients[i]  *= l_amb;
+      diffuses[i]  *= l_diff;
+      speculars[i] *= l_spec;
+   }
    
-   //Copy model data into arrays
-   build_arrays( lpos, l_amb, l_diff, l_spec);
-
    ///Get width of object
    double x_min = vertices[0].x;
    double x_max = vertices[0].x;
@@ -86,7 +49,7 @@ void Object::init_buffers( const vec4& lpos, const vec4& l_amb, const vec4& l_di
    double y_max = vertices[0].y;
    double z_min = vertices[0].z;
    double z_max = vertices[0].z;
-   for(size_t i=1; i<vertex_count; i++){
+   for(size_t i=1; i<vertices.size(); i++){
       if( vertices[i].x < x_min )
          x_min = vertices[i].x;
       if( vertices[i].x > x_max )
@@ -121,17 +84,16 @@ void Object::init_buffers( const vec4& lpos, const vec4& l_amb, const vec4& l_di
    glBindVertexArray( vao ); 
 #endif
 
-
    // Create and initialize a buffer object
    glGenBuffers( 1, &vbo );
    glBindBuffer( GL_ARRAY_BUFFER, vbo );
    glBufferData( GL_ARRAY_BUFFER, 5*vertices_size, NULL, GL_STATIC_DRAW );
-   glBufferSubData( GL_ARRAY_BUFFER, 0*vertices_size, vertices_size, vertices );
-   glBufferSubData( GL_ARRAY_BUFFER, 1*vertices_size, vertices_size, normals );
-   glBufferSubData( GL_ARRAY_BUFFER, 2*vertices_size, vertices_size, ambients );
-   glBufferSubData( GL_ARRAY_BUFFER, 3*vertices_size, vertices_size, diffuses );
-   glBufferSubData( GL_ARRAY_BUFFER, 4*vertices_size, vertices_size, speculars );
-   glBufferSubData( GL_ARRAY_BUFFER, 5*vertices_size, shininess_size, shininess );
+   glBufferSubData( GL_ARRAY_BUFFER, 0*vertices_size, vertices_size, &vertices[0]  );
+   glBufferSubData( GL_ARRAY_BUFFER, 1*vertices_size, vertices_size, &normals[0]   );
+   glBufferSubData( GL_ARRAY_BUFFER, 2*vertices_size, vertices_size, &ambients[0]  );
+   glBufferSubData( GL_ARRAY_BUFFER, 3*vertices_size, vertices_size, &diffuses[0]  );
+   glBufferSubData( GL_ARRAY_BUFFER, 4*vertices_size, vertices_size, &speculars[0] );
+   glBufferSubData( GL_ARRAY_BUFFER, 5*vertices_size, shininess_size, &shininess[0] );
 
    //load program
    glUseProgram( program );
@@ -216,84 +178,6 @@ vec3 Object::get_centroid()const{
    return centroid+get_translation();  
 }
 
-void Object::build_arrays( const vec4& lpos, const vec4& l_amb, const vec4& l_dif, const vec4& l_spec ){
-
-   mat4 rotate(cos(radians),  0.0, sin(radians), 0.0,
-               0.0,           1.0, 0.0,          0.0,
-               -sin(radians), 0.0, cos(radians), 0.0,
-               0.0,           0.0, 0.0,          1.0);
-
-   // copy vertex info into vertices and colors
-   for ( int i = 0; i < model_data.faceCount; ++i )
-   {
-      obj_face *o = model_data.faceList[i];
-      for ( int j = 0; j < 3; ++j )
-      {
-         vertices[3*i+j] = rotate*
-               vec4(model_data.vertexList[o->vertex_index[j]]->e[0]*scale_factor,
-                    model_data.vertexList[o->vertex_index[j]]->e[1]*scale_factor,
-                    model_data.vertexList[o->vertex_index[j]]->e[2]*scale_factor,
-                    1.0);
-
-         normals[3*i+j] = rotate*
-               vec4( model_data.normalList[o->normal_index[j]]->e[0],
-                     model_data.normalList[o->normal_index[j]]->e[1],
-                     model_data.normalList[o->normal_index[j]]->e[2],
-                     1.0);
-
-         diffuses[3*i+j] = 
-               vec4(model_data.materialList[o->material_index]->diff[0],
-                    model_data.materialList[o->material_index]->diff[1],
-                    model_data.materialList[o->material_index]->diff[2],
-                    1.0);
-         
-         ambients[3*i+j] =
-               vec4(model_data.materialList[o->material_index]->amb[0],
-                    model_data.materialList[o->material_index]->amb[1],
-                    model_data.materialList[o->material_index]->amb[2],
-                    1.0);
-         
-         speculars[3*i+j] =
-               vec4(model_data.materialList[o->material_index]->spec[0],
-                    model_data.materialList[o->material_index]->spec[1],
-                    model_data.materialList[o->material_index]->spec[2],
-                    1.0);
-         
-         shininess[3*i+j] = model_data.materialList[o->material_index]->shiny;
-
-#ifdef DEBUG_DRAW_NORMALS
-         vertices[vertex_count+(3*i+j)*2] = vertices[3*i+j];
-         vertices[vertex_count+(3*i+j)*2+1] =
-            vertices[3*i+j]+normals[3*i+j]*0.1*scale_factor;
-         vertices[vertex_count+(3*i+j)*2+1].w = 1.0;
-         
-         diffuses[vertex_count+(3*i+j)*2] = vec4(0.4,1.0,0.4,1.0);
-         diffuses[vertex_count+(3*i+j)*2+1] = vec4(0.4,1.0,0.4,1.0);
-
-         ambients[vertex_count+(3*i+j)*2] = l_amb;
-         ambients[vertex_count+(3*i+j)*2+1] = l_amb;
-         
-         speculars[vertex_count+(3*i+j)*2] = l_spec;
-         speculars[vertex_count+(3*i+j)*2+1] = l_spec;
-         
-         shininess[vertex_count+(3*i+j)*2] = 1.0;
-         shininess[vertex_count+(3*i+j)*2+1] = 1.0;
-#endif      
-      }
-   }
-   
-   /*************************************************/
-   /*    Iterate through materials, multiplying the */
-   /*    light material to the material.            */
-   /*************************************************/
-   for(size_t i=0; i<vertex_count; i++){
-      ambients[i]  *= l_amb;
-      diffuses[i]  *= l_dif;
-      speculars[i] *= l_spec;
-   }
-   
-}
-      
 void Object::adjust_translation( const vec3& motion ){
 
    velocity = vec4(motion.x,motion.y,motion.z,1.0);
@@ -332,7 +216,7 @@ void Object::set_translation( const vec3& trans ){
 }
 
 vec4* Object::get_vertices(){
-   return vertices;
+   return &vertices[0];
 }
 
 size_t Object::num_verts(){
