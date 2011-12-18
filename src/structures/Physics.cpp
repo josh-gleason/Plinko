@@ -1,5 +1,39 @@
 #include "Physics.h"
 
+// diagram of pegs and board
+/*
+
+   y -2.0    -1.5    -1.0    -0.5     0.0     0.5     1.0     1.5     2.0
+ x
+0.0    |                                                               |
+       |           P       L       I       N       K       O           |
+0.5    |                                                               |
+       |                                                               |
+1.0    |_      o       o       o       o       o       o       o      _|
+         \_                                                         _/
+1.5       _}       o       o       o       o       o       o       {_
+        _/                                                           \_
+2.0    {_      o       o       o       o       o       o       o      _}
+         \_                                                         _/
+2.5       _}       o       o       o       o       o       o       {_
+        _/                                                           \_
+
+       .................................................................
+       .........................pattern.repeats.........................
+       .................................................................
+
+         \_                                                         _/
+6.5        |       o       o       o       o       o       o       |
+           |                                                       |
+7.0        |       |       |       |       |       |       |       |
+           |       |       |       |       |       |       |       |
+7.5        |       |       |       |       |       |       |       |
+           | $500  | $1000 |  $0   |$10,000|  $0   | $1000 | $500  |
+8.0        +-------+-------+-------+-------+-------+-------+-------+
+     -2.0    -1.5    -1.0    -0.5     0.0     0.5     1.0     1.5     2.0
+
+*/
+
 // TODO: Check the geometric properties against the models,
 //       they should match otherwise collisions won't match
 //       what is being displayed. The geometric properties
@@ -8,7 +42,7 @@
 InitParams::InitParams()
  : puckPos(0.f,0.f),
    splineWidthHeight(1.f,1.f),
-   boardWidthHeight(10.f,10.f),
+   boardWidthHeight(4.f,8.f),
    puckDiameter(1.f),
    pegDiameter(1.f),
    boardFriction(0.01f),
@@ -28,10 +62,10 @@ Physics_Model::Physics_Model()
    m_broadphase(NULL),
    m_solver(NULL),
    m_dynamicsWorld(NULL),
-   m_board(NULL),
-   m_peg(NULL),
-   m_spline(NULL),
-   m_puck(NULL),
+   m_boardShape(NULL),
+   m_pegShape(NULL),
+   m_splineShape(NULL),
+   m_puckShape(NULL),
    m_puckXYplaneConstraint(NULL)
 {}
 
@@ -100,12 +134,73 @@ void Physics_Model::init( const InitParams& parameters )
 
    /// board ///
    {
+      // board is 4x8 (function takes 1/2 extents)
+      m_boardShape = new btBoxShape(btVector3(2.0, 4.0, 0.05));
+      btVector3 localInertia(0, 0, 0);
+      m_collisionShapes.push_back(m_boardShape);   // for deleting later
 
+      // transform board so that top top is centered and front lays on XZ plane
+      m_boardTransform.setIdentity();
+      m_boardTransform.setOrigin(btVector3(0.0, -4.0, -0.05));
+
+      btDefaultMotionState* myMotionState = new btDefaultMotionState(m_boardTransform);
+      btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_boardShape,localInertia);
+      btRigidBody* body = new btRigidBody(rbInfo);
+
+      // add board to dynamics world
+      m_dynamicsWorld->addRigidBody(body);
    }
 
    /// pegs ///
    {
+      // pegs are 0.1 diameter with 1.0 height around Z axis
+      m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.5,0.05));   // XXX not sure which is correct
+      //m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.05,0.5)); // XXX
+      btVector3 localInertia(0, 0, 0);
+      m_collisionShapes.push_back(m_pegShape);     // for deleting later
 
+      // set peg locations (see diagram at top)
+      for ( float row = 1.0; row < 6.1; row += 1.0 )
+      {
+         for ( float col = -1.5; col < 1.1; col += 0.5 )
+         {
+            /// add peg to world ///
+            {
+               m_pegTransforms.push_back(btTransform());
+               m_pegTransforms.back().setIdentity();
+               m_pegTransforms.back().setOrigin(btVector3(col, row, 0.4));
+
+               btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
+               btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
+               btRigidBody* body = new btRigidBody(rbInfo);
+               m_dynamicsWorld->addRigidBody(body);
+            }
+
+            /// add peg to world on next row ///
+            {
+               m_pegTransforms.push_back(btTransform());
+               m_pegTransforms.back().setIdentity();
+               m_pegTransforms.back().setOrigin(btVector3(col+0.25, row+0.5, 0.4));
+
+               btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
+               btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
+               btRigidBody* body = new btRigidBody(rbInfo);
+               m_dynamicsWorld->addRigidBody(body);
+            }
+         }
+         
+         /// add last peg on far right without a pair ///
+         {
+            m_pegTransforms.push_back(btTransform());
+            m_pegTransforms.back().setIdentity();
+            m_pegTransforms.back().setOrigin(btVector3(1.5, row, 0.4));
+
+            btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
+            btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
+            btRigidBody* body = new btRigidBody(rbInfo);
+            m_dynamicsWorld->addRigidBody(body);
+         }
+      }
    }
 
    /// splines ///

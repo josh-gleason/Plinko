@@ -99,10 +99,10 @@ class Physics_Model{
 
       // Note: Splines make up the boarders and seperate prize cubbys.
 
-      btCollisionShape                    *m_board;   // static
-      btCollisionShape                    *m_peg;     // static
-      btCollisionShape                    *m_spline;  // static
-      btCollisionShape                    *m_puck;    // dynamic
+      btCollisionShape                    *m_boardShape;   // static
+      btCollisionShape                    *m_pegShape;     // static
+      btCollisionShape                    *m_splineShape;  // static
+      btCollisionShape                    *m_puckShape;    // dynamic
 
       btTransform                         m_boardTransform;
       std::vector<btTransform>            m_pegTransforms;
@@ -116,6 +116,12 @@ class Physics_Model{
       /************************************************************/
       
       InitParams m_parameters;
+
+      // these are used to prescale the models to their correct size
+      vec3 m_boardExtraScaling;
+      vec3 m_puckExtraScaling;
+      vec3 m_pegExtraScaling;
+      vec3 m_splineExtraScaling;
 };
 
 #endif
