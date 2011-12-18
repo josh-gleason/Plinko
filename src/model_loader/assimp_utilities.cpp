@@ -17,7 +17,7 @@ int  read_model( const string& filename, const aiScene*& scene ){
    scene = aiImportFile( filename.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
 
    if( scene == NULL ){
-      cout << "ERROR: Model not loaded" << endl;
+      cout << "ERROR: Model " << filename << " not loaded" << endl;
       exit(0);
    }
    return 1;

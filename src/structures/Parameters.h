@@ -101,6 +101,7 @@ class Parameters{
       /*            Game Objects           */
       /*************************************/
       Object* board;
+      Object* pegs;
       Object* puck;
 
       /*************************************/

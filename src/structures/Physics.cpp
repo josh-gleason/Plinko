@@ -4,8 +4,8 @@
 /*
 
    y -2.0    -1.5    -1.0    -0.5     0.0     0.5     1.0     1.5     2.0
- x
-0.0    |                                                               |
+x
+0.0    |                             (0,0) <--- origin                 |
        |           P       L       I       N       K       O           |
 0.5    |                                                               |
        |                                                               |
@@ -34,23 +34,11 @@
 
 */
 
-// TODO: Check the geometric properties against the models,
-//       they should match otherwise collisions won't match
-//       what is being displayed. The geometric properties
-//       are used when building the transformations that need
-//       to be passed to the objects for displaying.
 InitParams::InitParams()
- : puckPos(0.f,0.f),
-   splineWidthHeight(1.f,1.f),
-   boardWidthHeight(4.f,8.f),
-   puckDiameter(1.f),
-   pegDiameter(1.f),
-   boardFriction(0.01f),
+ : boardFriction(0.01f),
    boardRestitution(0.01f),
    pegFriction(0.01f),
    pegRestitution(0.9f),
-   splineFriction(0.01f),
-   splineRestitution(0.9f),
    puckMass(7.0f),
    puckFriction(0.01f),
    puckRestitution(0.9f)
@@ -63,9 +51,10 @@ Physics_Model::Physics_Model()
    m_solver(NULL),
    m_dynamicsWorld(NULL),
    m_boardShape(NULL),
-   m_pegShape(NULL),
-   m_splineShape(NULL),
    m_puckShape(NULL),
+   m_pegShape(NULL),
+   m_boardRigidBody(NULL),
+   m_puckRigidBody(NULL),
    m_puckXYplaneConstraint(NULL)
 {}
 
@@ -102,11 +91,32 @@ Physics_Model::~Physics_Model()
 
    if ( m_puckXYplaneConstraint ) delete m_puckXYplaneConstraint;
 }
+ 
+// local function (assumes shape has just been allocated)
+void loadTriMesh(btTriangleMesh* mesh_bullet, const vec4* mesh_vec4, const int mesh_points)
+{
+   vec3 a0, a1, a2;
+   for(int i=0; i<mesh_points; i+=3){
 
-void Physics_Model::init( const InitParams& parameters )
+      a0 = vec3( mesh_vec4[i+0].x, mesh_vec4[i+0].y, mesh_vec4[i+0].z );
+      a1 = vec3( mesh_vec4[i+1].x, mesh_vec4[i+1].y, mesh_vec4[i+1].z );
+      a2 = vec3( mesh_vec4[i+2].x, mesh_vec4[i+2].y, mesh_vec4[i+2].z );
+
+      // For whatever your source of triangles is
+      //   give the three points of each triangle:
+      btVector3 v0(a0.x,a0.y,a0.z);
+      btVector3 v1(a1.x,a1.y,a1.z);
+      btVector3 v2(a2.x,a2.y,a2.z);
+
+      // Then add the triangle to the mesh:
+      mesh_bullet->addTriangle(v0,v1,v2);
+   }
+}
+
+void Physics_Model::init( const vec4* boardVertices, const int boardVertexCount, const InitParams& parameters )
 {
    m_parameters = parameters;
-   
+
    /******************************************/
    /*       General Physics Environment      */
    /******************************************/
@@ -134,8 +144,12 @@ void Physics_Model::init( const InitParams& parameters )
 
    /// board ///
    {
-      // board is 4x8 (function takes 1/2 extents)
-      m_boardShape = new btBoxShape(btVector3(2.0, 4.0, 0.05));
+      // load board geometry into triangle mesh object
+      btTriangleMesh *mTriMesh = new btTriangleMesh();
+      loadTriMesh(mTriMesh, boardVertices, boardVertexCount);
+
+      // create collision info from triangle mesh
+      m_boardShape = new btBvhTriangleMeshShape(mTriMesh,true);
       btVector3 localInertia(0, 0, 0);
       m_collisionShapes.push_back(m_boardShape);   // for deleting later
 
@@ -143,19 +157,24 @@ void Physics_Model::init( const InitParams& parameters )
       m_boardTransform.setIdentity();
       m_boardTransform.setOrigin(btVector3(0.0, -4.0, -0.05));
 
+      // construct motion state and rigid body
       btDefaultMotionState* myMotionState = new btDefaultMotionState(m_boardTransform);
       btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_boardShape,localInertia);
-      btRigidBody* body = new btRigidBody(rbInfo);
+      rbInfo.m_friction = m_parameters.boardFriction;
+      rbInfo.m_restitution = m_parameters.boardRestitution;
+      m_boardRigidBody = new btRigidBody(rbInfo);
 
       // add board to dynamics world
-      m_dynamicsWorld->addRigidBody(body);
+      m_dynamicsWorld->addRigidBody(m_boardRigidBody);
    }
 
    /// pegs ///
    {
+      // building pegs out of cylinder shapes for more accurate physics simulation
       // pegs are 0.1 diameter with 1.0 height around Z axis
-      m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.5,0.05));   // XXX not sure which is correct
-      //m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.05,0.5)); // XXX
+      //m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.5,0.05));   // XXX not sure which is correct
+      m_pegShape = new btCylinderShapeZ(btVector3(0.05,0.05,0.5)); // XXX
+      
       btVector3 localInertia(0, 0, 0);
       m_collisionShapes.push_back(m_pegShape);     // for deleting later
 
@@ -170,10 +189,13 @@ void Physics_Model::init( const InitParams& parameters )
                m_pegTransforms.back().setIdentity();
                m_pegTransforms.back().setOrigin(btVector3(col, row, 0.4));
 
+               // construct motion state and rigid body then add body to dynamics world
                btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
-               btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
-               btRigidBody* body = new btRigidBody(rbInfo);
-               m_dynamicsWorld->addRigidBody(body);
+               btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_pegShape, localInertia);
+               rbInfo.m_friction = m_parameters.pegFriction;
+               rbInfo.m_restitution = m_parameters.pegRestitution;
+               m_pegRigidBodies.push_back(new btRigidBody(rbInfo));
+               m_dynamicsWorld->addRigidBody(m_pegRigidBodies.back());
             }
 
             /// add peg to world on next row ///
@@ -182,36 +204,138 @@ void Physics_Model::init( const InitParams& parameters )
                m_pegTransforms.back().setIdentity();
                m_pegTransforms.back().setOrigin(btVector3(col+0.25, row+0.5, 0.4));
 
+               // construct motion state and rigid body then add body to dynamics world
                btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
-               btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
-               btRigidBody* body = new btRigidBody(rbInfo);
-               m_dynamicsWorld->addRigidBody(body);
+               btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_pegShape, localInertia);
+               rbInfo.m_friction = m_parameters.pegFriction;
+               rbInfo.m_restitution = m_parameters.pegRestitution;
+               m_pegRigidBodies.push_back(new btRigidBody(rbInfo));
+               m_dynamicsWorld->addRigidBody(m_pegRigidBodies.back());
             }
          }
-         
+
          /// add last peg on far right without a pair ///
          {
             m_pegTransforms.push_back(btTransform());
             m_pegTransforms.back().setIdentity();
             m_pegTransforms.back().setOrigin(btVector3(1.5, row, 0.4));
 
+            // construct motion state and rigid body then add body to dynamics world
             btDefaultMotionState* myMotionState = new btDefaultMotionState(m_pegTransforms.back());
-            btRigidBody::btRigidBodyConstructionInfo rbInfo(0,myMotionState,m_pegShape,localInertia);
-            btRigidBody* body = new btRigidBody(rbInfo);
-            m_dynamicsWorld->addRigidBody(body);
+            btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_pegShape, localInertia);
+            rbInfo.m_friction = m_parameters.pegFriction;
+            rbInfo.m_restitution = m_parameters.pegRestitution;
+            m_pegRigidBodies.push_back(new btRigidBody(rbInfo));
+            m_dynamicsWorld->addRigidBody(m_pegRigidBodies.back());
          }
       }
    }
 
-   /// splines ///
-   {
-
-   }
-
    /// puck ///
    {
+      // build puck
+      //m_puckShape = new btCylinderShapeZ(btVector3(0.39, 0.1, 0.39));   // XXX not sure which is correct
+      m_puckShape = new btCylinderShapeZ(btVector3(0.39, 0.39, 0.1)); // XXX
+      
+      btVector3 localInertia(0.0, 0.0, 0.0);
+      m_puckShape->calculateLocalInertia(m_parameters.puckMass, localInertia);
 
+      m_collisionShapes.push_back(m_puckShape);     // for deleting later
+
+      m_puckTransform.setIdentity();
+      m_puckTransform.setOrigin(btVector3(0.0, 0.0, 0.4));
+
+      // construct motion state and rigid body then add body to dynamics world
+      btDefaultMotionState* myMotionState = new btDefaultMotionState(m_puckTransform);
+      btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_puckShape, localInertia);
+      rbInfo.m_friction = m_parameters.puckFriction;
+      rbInfo.m_restitution = m_parameters.puckRestitution;
+      m_puckRigidBody = new btRigidBody(rbInfo);
+      m_dynamicsWorld->addRigidBody(m_puckRigidBody);
+      
+      // puck uses added constraints
+      m_puckRigidBody->setActivationState(DISABLE_DEACTIVATION);
+      m_puckRigidBody->setLinearFactor(btVector3(1,1,0));
+
+      btTransform frameInB = btTransform::getIdentity();
+      frameInB.setOrigin(btVector3(0.0, 0.0, 0.01));
+
+      m_puckXYplaneConstraint = new btGeneric6DofConstraint(*m_puckRigidBody, frameInB, true);
+      
+      // lowerlimit = upperlimit --> axis locked
+      // lowerlimit < upperlimit --> motion limited between values
+      // lowerlimit > upperlimit --> axis is free
+
+      // lock the Z axis movement
+      m_puckXYplaneConstraint->setLinearLowerLimit(btVector3(1,1,0));
+      m_puckXYplaneConstraint->setLinearUpperLimit(btVector3(0,0,0));
+
+      // lock the X, Y, rotations
+      //m_puckXYplaneConstraint->setAngularLowerLimit(btVector3(0,0,1));
+      //m_puckXYplaneConstraint->setAngularUpperLimit(btVector3(0,0,0));
+
+      m_dynamicsWorld->addConstraint(m_puckXYplaneConstraint);
    }
+}
+
+void Physics_Model::stepSimulation(btScalar time)
+{
+   m_dynamicsWorld->stepSimulation(time,10);
+   
+   // update puck location
+   m_puckRigidBody->getMotionState()->getWorldTransform(m_puckTransform);
+}
+
+vec3 Physics_Model::getPuckTranslation() const
+{
+   return vec3(m_puckTransform.getOrigin().getX(),
+               m_puckTransform.getOrigin().getY(),
+               m_puckTransform.getOrigin().getZ());
+}
+
+mat4 Physics_Model::getPuckTranslationMat() const
+{
+   return mat4(1.0, 0.0, 0.0, m_puckTransform.getOrigin().getX(),
+               0.0, 1.0, 0.0, m_puckTransform.getOrigin().getY(),
+               0.0, 0.0, 1.0, m_puckTransform.getOrigin().getZ(),
+               0.0, 0.0, 0.0, 1.0);
+}
+
+mat4 Physics_Model::getPuckRotation() const
+{
+   btMatrix3x3 rotation = m_puckTransform.getBasis();
+   
+   return mat4(rotation[0][0],rotation[0][1],rotation[0][2],0.0,
+               rotation[1][0],rotation[1][1],rotation[1][2],0.0,
+               rotation[2][0],rotation[2][1],rotation[2][2],0.0,
+               0.0,           0.0,           0.0,           1.0);
+}
+
+mat4 Physics_Model::getPuckTransform() const
+{
+   return getPuckTranslationMat()*getPuckRotation();
+}
+
+void Physics_Model::setPuckTranslation(const vec3& trans)
+{
+   m_puckRigidBody->setCenterOfMassTransform(
+      btTransform(
+         m_puckTransform.getRotation(),
+         btVector3(trans.x,trans.y,trans.z)));
+   
+   // update puckTransform
+   m_puckTransform = m_puckRigidBody->getCenterOfMassTransform();
+}
+
+void Physics_Model::setPuckRotation(const vec3& rot)
+{
+   m_puckRigidBody->setCenterOfMassTransform(
+      btTransform(
+         btQuaternion(rot.x,rot.y,rot.z),
+         m_puckTransform.getOrigin()));
+  
+   // update puckTransform
+   m_puckTransform = m_puckRigidBody->getCenterOfMassTransform();
 }
 
 #if 0

@@ -42,6 +42,7 @@ Parameters::Parameters( ){
    /*            Game Objects           */
    /*************************************/
    board = NULL;
+   pegs = NULL;
    puck = NULL;
       
    /*************************************/
@@ -66,9 +67,8 @@ Parameters::Parameters( ){
 
 Parameters::~Parameters(){
 
-   if(board != NULL)
-      delete board;
-   if(puck != NULL)
-      delete puck;
+   if( board ) delete board;
+   if( pegs )  delete pegs;
+   if( puck )  delete puck;
 }
 

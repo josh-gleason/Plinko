@@ -12,7 +12,8 @@ void display_function( void )
          /*               Game Display             */
          /******************************************/
          glClearColor( 0.5, 0.5, 0.5, 1.0 );
-         options.board->draw_shape(   options.camera.getTransform(), options.projectionMatrix, options.light.m_position); 
+         options.board->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position); 
+         options.pegs->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position); 
          options.puck->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position);
 
          options.hud.draw_shape();

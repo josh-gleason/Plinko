@@ -48,20 +48,6 @@ void init( int& argc, char** argv )
    glewInit();
 #endif
 
-   // initialize the pop-up menu structure
-   init_menu();
-
-   // function registration
-   glutDisplayFunc( display_function );
-   glutKeyboardFunc( keyboardPress );
-   glutKeyboardUpFunc( keyboardUp );
-   glutSpecialFunc( special_keys);
-   glutSpecialUpFunc( special_Upkeys);
-   glutMouseFunc( mouseEvent );
-   glutMotionFunc( mouseMove );
-   glutReshapeFunc( reshape );
-   glutTimerFunc( 17, timerHandle, 0);
-
    /*********************************************/
    /*               OpenGL Setup                */
    /*********************************************/
@@ -106,10 +92,17 @@ void init( int& argc, char** argv )
    /*********************************************/
 
    // load models from file
+   options.board = new Object("data/models/board.obj", 1.0, options.program);
+   options.pegs = new Object("data/models/pegs.obj", 1.0, options.program);
+   options.puck = new Object("data/models/puck.obj", 1.0, options.program);
 
    // init buffers for models
+   options.board->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
+   options.pegs->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
+   options.puck->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
 
    // set initial object positions
+   // XXX not needed
 
    /*********************************************/
    /*               Texture Mapping             */
@@ -117,7 +110,7 @@ void init( int& argc, char** argv )
 
    // build scoreboard
    options.scoreboard.init( options.program );
-   
+
    // TODO There should be only 1 player
    options.hud.init( options.program, options.name, options.name );
 	
@@ -125,9 +118,8 @@ void init( int& argc, char** argv )
    /*               Physics Engine              */
    /*********************************************/
    
-   // add objects to physical world
-   
    // initialize physics engine
+   options.physics.init( options.board->get_vertices(), options.board->num_verts() );
 
 }
 
@@ -139,6 +131,21 @@ int main( int argc, char **argv )
    srand(time(0));
    parse_arguements( argc, argv, options );
    init( argc, argv );
+
+   // initialize the pop-up menu structure
+   init_menu();
+
+   // function registration
+   glutDisplayFunc( display_function );
+   glutKeyboardFunc( keyboardPress );
+   glutKeyboardUpFunc( keyboardUp );
+   glutSpecialFunc( special_keys);
+   glutSpecialUpFunc( special_Upkeys);
+   glutMouseFunc( mouseEvent );
+   glutMotionFunc( mouseMove );
+   glutReshapeFunc( reshape );
+
+   glutTimerFunc( 17, timerHandle, 0);
 
    cout << "================ Camera Controls ================" << endl
         << "============ (w,a,s,d,q,e) movement =============" << endl

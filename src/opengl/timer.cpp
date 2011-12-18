@@ -17,6 +17,10 @@ void timerHandle( int state ){
 
    if( options.view_mode == 0 ){
       // Game mode
+      options.physics.stepSimulation(17);
+
+      options.puck->set_translation(options.physics.getPuckTranslation());
+      options.puck->set_rotation(options.physics.getPuckRotation());
    }
 
    glutPostRedisplay(); 
