@@ -1,3 +1,7 @@
+*.swp
+*.blend1
+*.blend2
+*.blend3
 data/shaders/compile_test/compileshader
 bin
 build
