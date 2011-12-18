@@ -372,24 +372,30 @@ void HUD::build_texture_values( vec4 const& tl, vec4 const& br, string const& ta
 
 void HUD::increment_score( const int& amt ){
    player_score += amt;
+   rebind_data();
 }
 
 void HUD::decrement_score( const int& amt ){
    player_score -= amt;
+   rebind_data();
 }
 
 void HUD::increment_turns( const int& amt ){
    player_turns += amt;
+   rebind_data();
 }
 
 void HUD::decrement_turns( const int& amt ){
    player_turns -= amt;
+   rebind_data();
 }
 
 void HUD::reset_turns(){
    player_turns = 5;
+   rebind_data();
 }
 
 void HUD::reset_score(){
    player_score = 0;
+   rebind_data();
 }
