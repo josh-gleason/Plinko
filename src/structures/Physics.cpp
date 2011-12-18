@@ -35,13 +35,13 @@ x
 */
 
 InitParams::InitParams()
- : boardFriction(0.01f),
-   boardRestitution(0.7f),
-   pegFriction(0.01f),
-   pegRestitution(0.9f),
-   puckMass(2.0f),
-   puckFriction(0.01f),
-   puckRestitution(0.9f)
+ : boardFriction(0.1f),
+   boardRestitution(0.3f),
+   pegFriction(0.3f),
+   pegRestitution(0.5f),
+   puckMass(4.0f),
+   puckFriction(0.1f),
+   puckRestitution(0.8f)
 {}
    
 Physics_Model::Physics_Model()
@@ -232,7 +232,7 @@ void Physics_Model::init( const vec4* boardVertices, const int boardVertexCount,
    /// puck ///
    {
       // build puck
-      m_puckShape = new btCylinderShapeZ(btVector3(0.19, 0.19, 0.1));
+      m_puckShape = new btCylinderShapeZ(btVector3(0.18, 0.18, 0.1));
       btVector3 localInertia(0.0, 0.0, 0.0);
       m_puckShape->calculateLocalInertia(m_parameters.puckMass, localInertia); 
       m_collisionShapes.push_back(m_puckShape);     // for deleting later
