@@ -98,11 +98,26 @@ void mouseEvent(int button, int state, int x, int y)
 void mouseMove(int x, int y)
 {
    // TODO
-#if 0
-   //Get the current mouse position in world coordinates
-   vec4 world_points = window2world( x, y);
+   const double bound = 1.5;
    
-   options.set_paddle2_dest(vec2(world_points.x,world_points.z));
-#endif
+   if( options.view_mode == 0 ){
+
+      //Get the current mouse position in world coordinates
+      vec4 world_points = window2world( x, y);
+      
+      //compare axis movement with previous x axis position
+      double motion = world_points.x - options.puck_x_axis;
+      
+      if( options.puck->get_translation().x + motion > bound )
+         motion = bound - options.puck->get_translation().x;
+      
+      if( options.puck->get_translation().x + motion < -bound )
+         motion = -bound + options.puck->get_translation().x;
+
+      options.puck->translation(vec3(motion,0,0));
+      
+      options.puck_x_axis = options.puck->get_translation().x;
+
+   }
 }
 

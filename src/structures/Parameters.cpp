@@ -63,6 +63,8 @@ Parameters::Parameters( ){
    light_timerStep = 10;
    light_moveStep = 0.06;
    world_timerStep = 17;
+   puck_x_axis = 0;
+
 }
 
 Parameters::~Parameters(){

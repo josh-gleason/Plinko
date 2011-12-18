@@ -7,7 +7,7 @@ void display_function( void )
    switch (options.view_mode)
    {
       case 0:
-      case 4:
+      case 1:
          /******************************************/
          /*               Game Display             */
          /******************************************/
@@ -19,7 +19,7 @@ void display_function( void )
          options.hud.draw_shape();
          break;
       
-      case 1:  // scoreboard
+      case 2:  // scoreboard
          
          /******************************************/
          /*          Scoreboard Display            */
@@ -29,7 +29,7 @@ void display_function( void )
          options.scoreboard.draw_shape();
          
          break;
-      case 2:  // win!
+      case 3:  // win!
          glClearColor( 1.0, 1.0, 1.0, 1.0 );
          options.winner->draw_shape();
    }

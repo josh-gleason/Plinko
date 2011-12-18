@@ -128,6 +128,7 @@ class Parameters{
       unsigned int light_timerStep;
       GLfloat light_moveStep;
       GLfloat world_timerStep;
+      double puck_x_axis;
 };
 
 #endif

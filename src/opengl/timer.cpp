@@ -14,8 +14,11 @@ void timerHandle( int state ){
      glutTimerFunc( options.world_timerStep, &timerHandle, 0);
      return;
    }
+   
+   if( options.view_mode == 0 ){ //setup mode
 
-   if( options.view_mode == 0 ){
+   }
+   if( options.view_mode == 1 ){
       // Game mode
       options.physics.stepSimulation(1./60.);
 
