@@ -387,6 +387,8 @@ void HUD::increment_turns( const int& amt ){
 
 void HUD::decrement_turns( const int& amt ){
    player_turns -= amt;
+   if( player_turns < 0 )
+      player_turns = 0;
    rebind_data();
 }
 

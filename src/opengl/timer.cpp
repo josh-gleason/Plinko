@@ -50,7 +50,7 @@ void timerHandle( int state ){
 
          //show the screen 
          options.hud.increment_score( amt );
-         options.hud.decrement_turns( amt );
+         options.hud.decrement_turns( 1 );
 
          //reset the puck position
          options.physics.setPuckTranslation(vec3(0.3,0.0, 0.1));
