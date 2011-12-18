@@ -129,6 +129,9 @@ class Parameters{
       GLfloat light_moveStep;
       GLfloat world_timerStep;
       double puck_x_axis;
+      double avg_travel;
+      int tick_counter;
+      vec3 puck_pos;
 };
 
 #endif

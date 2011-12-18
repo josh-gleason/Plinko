@@ -114,7 +114,7 @@ void init( int& argc, char** argv )
    options.scoreboard.init( options.program );
 
    // TODO There should be only 1 player
-   options.hud.init( options.program, options.name, options.name );
+   options.hud.init( options.program, options.name );
 	
    /*********************************************/
    /*               Physics Engine              */

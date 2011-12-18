@@ -1,5 +1,46 @@
 #include "HUD.h"
 
+const vec2 chr_ran[37] = { vec2(0.003, 0.022), //a - 0
+                           vec2(0.031, 0.048), //b - 1
+                           vec2(0.057, 0.077), //c - 2
+                           vec2(0.085, 0.108), //d - 3
+                           vec2(0.116, 0.131), //e - 4 
+                           vec2(0.142, 0.156), //f - 5 
+                           vec2(0.165, 0.187), //g - 6
+                           vec2(0.198, 0.215), //h - 7
+                           vec2(0.225, 0.234), //i - 8
+                           vec2(0.240, 0.250), //j - 9
+                           vec2(0.260, 0.280), //k - 10
+                           vec2(0.287, 0.304), //l - 11
+                           vec2(0.311, 0.335), //m - 12
+                           vec2(0.345, 0.362), //n - 13
+                           vec2(0.372, 0.395), //o - 14
+                           vec2(0.404, 0.421), //p - 15
+                           vec2(0.427, 0.451), //q - 16
+                           vec2(0.459, 0.478), //r - 17
+                           vec2(0.488, 0.506), //s - 18
+                           vec2(0.512, 0.532), //t - 19
+                           vec2(0.538, 0.562), //u - 20
+                           vec2(0.565, 0.594), //v - 21
+                           vec2(0.594, 0.626), //w - 22
+                           vec2(0.632, 0.654), //x - 23
+                           vec2(0.659, 0.679), //y - 24
+                           vec2(0.685, 0.709), //z - 25
+                           vec2(0.712, 0.735), //0 - 26
+                           vec2(0.740, 0.758), //1 - 27
+                           vec2(0.765, 0.784), //2 - 28
+                           vec2(0.791, 0.812), //3 - 29
+                           vec2(0.815, 0.837), //4 - 30
+                           vec2(0.842, 0.864), //5 - 31
+                           vec2(0.868, 0.891), //6 - 32
+                           vec2(0.895, 0.914), //7 - 33
+                           vec2(0.920, 0.942), //8 - 34
+                           vec2(0.946, 0.969), //9 - 35
+                           vec2(0.972, 0.999)  // <space> - 36
+};
+
+
+
 /*****************************************/
 /*              Load an image            */
 /*****************************************/
@@ -66,32 +107,13 @@ unsigned char* HUD::read_image(char* fname)
 /*****************************************/
 HUD::HUD( ){
    
-   player1_score = 0;
-   player2_score = 0;
-   player1_wins = 0;
-   player2_wins = 0;
+   player_score = 0;
+   player_turns = 5;
 }
 
-HUD::~HUD( ){
-
-   make_empty();
-
-}
-
-void HUD::make_empty(){
-   if( points_p1 != NULL )
-      delete [] points_p1;
-   if( points_p2 != NULL )
-      delete [] points_p2;
-   if( texture_p1 != NULL )
-      delete [] texture_p1;
-   if( texture_p2 != NULL )
-      delete [] texture_p2;
-}
-
-
-void HUD::init( const GLuint& prog, const string& p1name, const string& p2name ){
-
+void HUD::init( const GLuint& prog, const string& pname){
+   
+   cout << "Start init" << endl;
    vec4 tl_tex;
    vec4 br_tex;
 
@@ -102,85 +124,29 @@ void HUD::init( const GLuint& prog, const string& p1name, const string& p2name )
    img_data = read_image( "data/characters_flip.ppm" );
 
    //create names
-   p1_name = p1name;
-   p2_name = p2name;
-
+   player_name = pname;
+   
+   cout << "Start of name" << endl;
    //build points and tex_coords arrays
-   points_p1 = NULL;
-   texture_p1 = NULL;
-   points_p2 = NULL;
-   texture_p2 = NULL;
+   points_name.clear();
+   texture_name.clear();
 
    tl_tex = vec4(-0.99, 0.99, 0, 1);
    br_tex = vec4(-0.60, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p1_name + string("   ")), points_p1, texture_p1, vex_size_p1, tex_size_p1);
-   tl_tex = vec4( 0.35, 0.99, 0, 1);
-   br_tex = vec4( 0.74, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p2_name + string("   ")), points_p2, texture_p2, vex_size_p2, tex_size_p2);
+   vec2* tt;
+   vec4* tv;
+   build_texture_values( tl_tex, br_tex, string(player_name + string("   ")), tv, tt, vex_size, tex_size);
+   
+   num_points = tex_size/sizeof(vec2);
+   for(size_t i=0; i<num_points; i++){
+      points_name.push_back( tv[i] );
+      texture_name.push_back( tt[i] );
+   }
 
-   num_points_p1 = tex_size_p1/sizeof(vec2);
-   num_points_p2 = tex_size_p2/sizeof(vec2);
+   delete [] tv;
+   delete [] tt;
 
-   //build points and tex_coords arrays
-   string p1s, p2s;
-
-   stringstream sin;
-
-   sin.clear();
-   sin.str("");
-   sin << player1_score;
-   sin >> p1s;
-
-   sin.clear();
-   sin.str("");
-   sin << player2_score;
-   sin >> p2s;
-
-
-   points_p1s = NULL;
-   texture_p1s = NULL;
-   points_p2s = NULL;
-   texture_p2s = NULL;
-
-   tl_tex = vec4(-0.60, 0.99, 0, 1);
-   br_tex = vec4(-0.50, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p1s), points_p1s, texture_p1s, vex_size_p1s, tex_size_p1s);
-   tl_tex = vec4( 0.74, 0.99, 0, 1);
-   br_tex = vec4( 0.84, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p2s), points_p2s, texture_p2s, vex_size_p2s, tex_size_p2s);
-
-   num_points_p1s = tex_size_p1s/sizeof(vec2);
-   num_points_p2s = tex_size_p2s/sizeof(vec2);
-
-   //build wins and tex_coords arrays
-   string p1w, p2w;
-
-   sin.clear();
-   sin.str("");
-   sin << player1_wins;
-   sin >> p1w;
-
-   sin.clear();
-   sin.str("");
-   sin << player2_wins;
-   sin >> p2w;
-
-
-   points_p1w = NULL;
-   texture_p1w = NULL;
-   points_p2w = NULL;
-   texture_p2w = NULL;
-
-   tl_tex = vec4(-0.45, 0.99, 0, 1);
-   br_tex = vec4(-0.35, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p1w), points_p1w, texture_p1w, vex_size_p1w, tex_size_p1w);
-   tl_tex = vec4( 0.89, 0.99, 0, 1);
-   br_tex = vec4( 0.99, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p2w), points_p2w, texture_p2w, vex_size_p2w, tex_size_p2w);
-
-   num_points_p1w = tex_size_p1w/sizeof(vec2);
-   num_points_p2w = tex_size_p2w/sizeof(vec2);
-
+   
    /*****************/
 
    // Initialize texture objects
@@ -221,51 +187,93 @@ void HUD::init( const GLuint& prog, const string& p1name, const string& p2name )
 
    rebind_data();
 
+   cout << "End init" << endl;
 }
 
 
 void HUD::rebind_data( ){
+   
+   //build points and tex_coords arrays
+   vec4 tl_tex;
+   vec4 br_tex;
+   vec2* tt;
+   vec4* tv;
+   string ps;
+   stringstream sin;
+
+   sin.clear();
+   sin.str("");
+   sin << player_score;
+   sin >> ps;
+
+   points_score.clear();
+   texture_score.clear();
+
+   tl_tex = vec4(-0.60, 0.99, 0, 1);
+   br_tex = vec4(-0.50, 0.95, 0, 1);
+   build_texture_values( tl_tex, br_tex, string(ps), tv, tt, vex_size_score, tex_size_score);
+
+   for(size_t i=0; i<num_points; i++){
+      points_score.push_back( tv[i] );
+      texture_score.push_back( tt[i] );
+   }
+   delete [] tv;
+   delete [] tt;
+
+   num_points_score = tex_size_score/sizeof(vec2);
+
+   //build wins and tex_coords arrays
+   string pt;
+
+   sin.clear();
+   sin.str("");
+   sin << player_turns;
+   sin >> pt;
+
+   points_turns.clear();
+   texture_turns.clear();
+
+   tl_tex = vec4(-0.45, 0.99, 0, 1);
+   br_tex = vec4(-0.35, 0.95, 0, 1);
+   build_texture_values( tl_tex, br_tex, string(pt), tv, tt, vex_size_turns, tex_size_turns);
+
+   for(size_t i=0; i<num_points; i++){
+      points_turns.push_back( tv[i] );
+      texture_turns.push_back( tt[i] );
+   }
+   delete [] tv;
+   delete [] tt;
+
+   num_points_turns = tex_size_turns/sizeof(vec2);
 
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
-   glBufferData( GL_ARRAY_BUFFER, vex_size_p1 + vex_size_p2 + vex_size_p1s + vex_size_p2s + vex_size_p1w + vex_size_p2w +
-                                  tex_size_p1 + tex_size_p2 + tex_size_p1s + tex_size_p2s + tex_size_p1w + tex_size_p2s, NULL, GL_STATIC_DRAW );
+   glBufferData( GL_ARRAY_BUFFER, vex_size + vex_size_score + vex_size_turns + 
+         tex_size + tex_size_score + tex_size_turns,  NULL, GL_DYNAMIC_DRAW );
 
    // Specify an offset to keep track of where we're placing data in our
    //   vertex array buffer.  We'll use the same technique when we
    //   associate the offsets with vertex attribute pointers.
    GLintptr offset = 0;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p1, points_p1 );
-   offset += vex_size_p1;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2, points_p2 );
-   offset += vex_size_p2;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p1s, points_p1s );
-   offset += vex_size_p1s;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2s, points_p2s );
-   offset += vex_size_p2s;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p1w, points_p1w );
-   offset += vex_size_p1w;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2w, points_p2w );
-   offset += vex_size_p2w;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size, &points_name[0] );
+   offset += vex_size;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_score, &points_score[0] );
+   offset += vex_size_score;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_turns, &points_turns[0] );
+   offset += vex_size_turns;
 
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p1, texture_p1 );
-   offset += tex_size_p1;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2, texture_p2 );
-   offset += tex_size_p2;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p1s, texture_p1s );
-   offset += tex_size_p1s;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2s, texture_p2s );
-   offset += tex_size_p2s;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p1w, texture_p1w );
-   offset += tex_size_p1w;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2w, texture_p2w );
-   offset += tex_size_p2w;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size, &texture_name[0] );
+   offset += tex_size;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_score, &texture_score[0] );
+   offset += tex_size_score;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_turns, &texture_turns[0] );
+   offset += tex_size_turns;
 
    // set up vertex arrays
    offset = 0;
    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
    glEnableVertexAttribArray( vPosition );
    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset) );
-   offset += vex_size_p1 + vex_size_p2 + vex_size_p1s + vex_size_p2s + vex_size_p1w + vex_size_p2w;
+   offset += vex_size + vex_size_score + vex_size_turns;
 
    GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" );
    glEnableVertexAttribArray( vTexCoord );
@@ -273,122 +281,11 @@ void HUD::rebind_data( ){
 
    drawmode = glGetUniformLocation( program, "drawmode");
 
-
+   cout << "end rebind" << endl;
 }
-
-void HUD::p1_score( const GLuint& score ){
-   vec4 tl_tex;
-   vec4 br_tex;
-
-   player1_score = score;
-   string p1s;
-
-   stringstream sin;
-
-   sin.clear();
-   sin.str("");
-   sin << player1_score;
-   sin >> p1s;
-
-   if( points_p1s != NULL ) delete points_p1s;
-   points_p1s = NULL;
-   if( texture_p1s != NULL ) delete texture_p1s;
-   texture_p1s = NULL;
-
-   tl_tex = vec4(-0.60, 0.99, 0, 1);
-   br_tex = vec4(-0.50, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p1s), points_p1s, texture_p1s, vex_size_p1s, tex_size_p1s);
-
-   num_points_p1s = tex_size_p1s/sizeof(vec2);
-   rebind_data();
-}
-
-void HUD::p2_score( const GLuint& score ){
-   vec4 tl_tex;
-   vec4 br_tex;
-
-   player2_score = score;
-   string p2s;
-
-   stringstream sin;
-   sin.clear();
-   sin.str("");
-   sin << player2_score;
-   sin >> p2s;
-   
-   if( points_p2s != NULL ) delete points_p2s;
-   points_p2s = NULL;
-   if( texture_p2s != NULL ) delete texture_p2s;
-   texture_p2s = NULL;
-
-   tl_tex = vec4( 0.74, 0.99, 0, 1);
-   br_tex = vec4( 0.84, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p2s), points_p2s, texture_p2s, vex_size_p2s, tex_size_p2s);
-
-   num_points_p2s = tex_size_p2s/sizeof(vec2);
-   rebind_data();
-
-}
-
-void HUD::p1_win( const GLuint& score ){
-   vec4 tl_tex;
-   vec4 br_tex;
-
-   player1_wins = score;
-   string p1w;
-
-   stringstream sin;
-   sin.clear();
-   sin.str("");
-   sin << player1_wins;
-   sin >> p1w;
-   
-   if( points_p1w != NULL ) delete points_p1w;
-   points_p1w = NULL;
-   if( texture_p1w != NULL ) delete texture_p1w;
-   texture_p1w = NULL;
-
-   tl_tex = vec4(-0.45, 0.99, 0, 1);
-   br_tex = vec4(-0.35, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p1w), points_p1w, texture_p1w, vex_size_p1w, tex_size_p1w);
-
-   num_points_p1w = tex_size_p1w/sizeof(vec2);
-   rebind_data();
-
-}
-
-
-
-void HUD::p2_win( const GLuint& score ){
-   vec4 tl_tex;
-   vec4 br_tex;
-
-   player2_wins = score;
-   string p2w;
-
-   stringstream sin;
-   sin.clear();
-   sin.str("");
-   sin << player2_wins;
-   sin >> p2w;
-   
-   if( points_p2w != NULL ) delete points_p2w;
-   points_p2w = NULL;
-   if( texture_p2w != NULL ) delete texture_p2w;
-   texture_p2w = NULL;
-
-   tl_tex = vec4( 0.89, 0.99, 0, 1);
-   br_tex = vec4( 0.99, 0.95, 0, 1);
-   build_texture_values( tl_tex, br_tex, string(p2w), points_p2w, texture_p2w, vex_size_p2w, tex_size_p2w);
-
-   num_points_p2w = tex_size_p2w/sizeof(vec2);
-   rebind_data();
-
-}
-
 
 void HUD::draw_shape(  ){
-   
+
 #ifdef __APPLE__
    glBindVertexArrayAPPLE( vao );
 #else
@@ -399,7 +296,7 @@ void HUD::draw_shape(  ){
 
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
    glBindTexture( GL_TEXTURE_2D, texture );
-   glDrawArrays( GL_TRIANGLES, 0, num_points_p1 + num_points_p2 + num_points_p1s + num_points_p2s + num_points_p1w + num_points_p2w);
+   glDrawArrays( GL_TRIANGLES, 0, num_points + num_points_score + num_points_turns);
 
 
 }
@@ -473,3 +370,26 @@ void HUD::build_texture_values( vec4 const& tl, vec4 const& br, string const& ta
 }
 
 
+void HUD::increment_score( const int& amt ){
+   player_score += amt;
+}
+
+void HUD::decrement_score( const int& amt ){
+   player_score -= amt;
+}
+
+void HUD::increment_turns( const int& amt ){
+   player_turns += amt;
+}
+
+void HUD::decrement_turns( const int& amt ){
+   player_turns -= amt;
+}
+
+void HUD::reset_turns(){
+   player_turns = 5;
+}
+
+void HUD::reset_score(){
+   player_score = 0;
+}

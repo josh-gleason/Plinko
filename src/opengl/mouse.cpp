@@ -113,10 +113,10 @@ void mouseMove(int x, int y)
       
       if( options.puck->get_translation().x + motion < -bound )
          motion = -bound + options.puck->get_translation().x;
-
-      options.puck->translation(vec3(motion,0,0));
       
-      options.puck_x_axis = options.puck->get_translation().x;
+      options.puck->adjust_translation(vec3(motion,0,0));
+      options.physics.adjPuckTranslation(vec3(motion,0,0));
+      options.puck_x_axis = options.physics.getPuckTranslation().x;
 
    }
 }

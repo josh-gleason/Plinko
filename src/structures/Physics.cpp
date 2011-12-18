@@ -36,7 +36,7 @@ x
 
 InitParams::InitParams()
  : boardFriction(0.01f),
-   boardRestitution(0.9f),
+   boardRestitution(0.7f),
    pegFriction(0.01f),
    pegRestitution(0.9f),
    puckMass(2.0f),

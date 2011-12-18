@@ -87,8 +87,6 @@ void keyboardPress( unsigned char key, int x, int y ){
    
    if( options.view_mode == 2 ){
       options.view_mode = 0;
-      options.hud.p1_score(0);
-      options.hud.p2_score(0);
       delete options.winner;
    }
 
@@ -98,8 +96,7 @@ void keyboardPress( unsigned char key, int x, int y ){
       /*       Change the view mode     */
       /**********************************/
       case '8':
-         if( options.view_mode == 0 ) options.view_mode = 1;
-         else options.view_mode = 0;
+         options.view_mode = (options.view_mode + 1)%2;
          break;
       /********************************/
       /*         Light Actions        */
