@@ -215,6 +215,12 @@ void Winner::rebind( const int sc ){
    vec4 tl_tex;
    vec4 br_tex;
 
+
+   if( score == string("10000") )
+      cout << "success" << endl;
+   else
+      cout << "faul" << endl;
+
    //build points and tex_coords arrays
    points_p.clear();
    tex_coords_p.clear();
