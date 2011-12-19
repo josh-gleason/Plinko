@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define MAX_TURNS 1
+#define MAX_TURNS 3
 
 class HUD{
 
