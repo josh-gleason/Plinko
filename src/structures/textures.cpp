@@ -85,7 +85,7 @@ void TEX::init( const GLuint& prog ){
    // Initialize texture objects
    glGenTextures( 1, &texture );
    glBindTexture( GL_TEXTURE_2D, texture );
-   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, banner_rows, banner_cols, 0, GL_RGB, GL_UNSIGNED_BYTE, banner_data );
+   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, banner_rows, banner_cols, 0, GL_BGR, GL_UNSIGNED_BYTE, banner_data );
    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
