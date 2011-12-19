@@ -126,7 +126,7 @@ Winner::Winner( const int sc, const string nm, const GLuint& prog ){
    tex_coords_main.clear();
    vec4 tl_tex(-0.75, 0.9, 0, 1);
    vec4 br_tex( 0.75, 0.5, 0, 1);
-   build_texture_values( tl_tex, br_tex, string("Final Score for ")+nm, tv, tt, vex_size_main, tex_size_main);
+   build_texture_values( tl_tex, br_tex, string("Game Over"), tv, tt, vex_size_main, tex_size_main);
 
    num_points_main = tex_size_main/sizeof(vec2);
    for(size_t i=0; i<num_points_main; i++){
@@ -204,9 +204,9 @@ void Winner::rebind( const int sc ){
    string score = ""; 
    stringstream sin;
    sin << sc;
-   sin >> score;
+   score = sin.str();
    sin.clear();
-
+   
    /****************/
    /*    PLAYER    */
    /****************/
@@ -235,36 +235,34 @@ void Winner::rebind( const int sc ){
 
    // Create and initialize a buffer object
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
-   glBufferData( GL_ARRAY_BUFFER, /*vex_size_main + vex_size_p2 +*/ vex_size_p 
-         + /*tex_size_main + */tex_size_p /*+ tex_size_p2*/, 
+   glBufferData( GL_ARRAY_BUFFER, vex_size_main + vex_size_p2
+         + tex_size_main + tex_size_p2, 
          NULL, GL_STATIC_DRAW);//+ tex_size_p +
 
    // Specify an offset to keep track of where we're placing data in our
    //   vertex array buffer.  We'll use the same technique when we
    //   associate the offsets with vertex attribute pointers.
    GLintptr offset = 0;
-   //glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_main, &points_main[0] );
-   //offset += vex_size_main;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p, &points_p[0] );
-   offset += vex_size_p;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_main, &points_main[0] );
+   offset += vex_size_main;
+   //glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p, &points_p[0] );
+   //offset += vex_size_p;
 
-   //glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2, &points_p2[0] );
-   //offset += vex_size_p2;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2, &points_p2[0] );
+   offset += vex_size_p2;
 
-   /*
       glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_main, &tex_coords_main[0] );
       offset += tex_size_main;
-    */
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p, &tex_coords_p[0] );
-   offset += tex_size_p;
-   //glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2, &tex_coords_p2[0] );
+   //glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p, &tex_coords_p[0] );
+   //offset += tex_size_p;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2, &tex_coords_p2[0] );
 
    // set up vertex arrays
    offset = 0;
    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
    glEnableVertexAttribArray( vPosition );
    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset) );
-   offset += /*vex_size_main + vex_size_p2 +*/ vex_size_p;
+   offset += vex_size_main + vex_size_p2;// vex_size_p;
 
    GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" );
    glEnableVertexAttribArray( vTexCoord );
@@ -284,7 +282,7 @@ void Winner::draw_shape(  ){
 
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
    glBindTexture( GL_TEXTURE_2D, texture );
-   glDrawArrays( GL_TRIANGLES, 0, points_p.size());//num_points_main + num_points_p2 + num_points_p);
+   glDrawArrays( GL_TRIANGLES, 0, num_points_main + num_points_p2);// + num_points_p);
 
 
 }
