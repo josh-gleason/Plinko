@@ -95,7 +95,7 @@ void init( int& argc, char** argv )
    // load models from file
    options.board = new Object("data/models/board.obj", 1.0, options.program);
    options.pegs = new Object("data/models/pegs.obj", 1.0, options.program);
-   options.puck = new Object("data/models/puck.obj", 1.0, options.program);
+   options.puck = new Object("data/models/puck.obj", 0.95, options.program);
   
 
    // init buffers for models
@@ -114,7 +114,6 @@ void init( int& argc, char** argv )
    // build scoreboard
    options.scoreboard.init( options.program );
 
-   // TODO There should be only 1 player
    options.hud.init( options.program, options.name );
 
    /*********************************************/

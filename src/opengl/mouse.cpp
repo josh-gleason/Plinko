@@ -98,7 +98,7 @@ void mouseEvent(int button, int state, int x, int y)
 void mouseMove(int x, int y)
 {
    // TODO
-   const double bound = 1.5;
+   const double bound = 1.75;
    
    if( options.view_mode == 0 ){
 
