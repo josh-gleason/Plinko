@@ -63,11 +63,11 @@ static vec3 window2world( const int x, const int y ){
    vec3 l0(nearX,nearY,nearZ); // a point on the line
    vec3 l = vec3(farX,farY,farZ) - l0; // vector in dir of line
    
-   // vec3 n(0.0,1.0,0.0); // the norm of the plane
-   // vec3 p0(0.0,0.0,0.0);   // a point on the plane y=0
-   // GLfloat d = dot(p0-l0,n)/dot(l,n);
-
-   GLfloat d = -nearY/(farY-nearY);
+   vec3 n(0.0,0.0,1.0); // the norm of the plane
+   vec3 p0(0.0,0.0,0.0);   // a point on the plane y=0
+   GLfloat d = dot(p0-l0,n)/dot(l,n);
+   
+   // GLfloat d = -nearY/(farY-nearY);
 
    return l0+l*d;
 }
@@ -98,7 +98,7 @@ void mouseEvent(int button, int state, int x, int y)
 void mouseMove(int x, int y)
 {
    // TODO
-   const double bound = 1.5;
+   const double bound = 1.75;
    
    if( options.view_mode == 0 ){
 
@@ -112,7 +112,7 @@ void mouseMove(int x, int y)
          motion = bound - options.puck->get_translation().x;
       
       if( options.puck->get_translation().x + motion < -bound )
-         motion = -bound + options.puck->get_translation().x;
+         motion = -bound - options.puck->get_translation().x;
       
       options.puck->adjust_translation(vec3(motion,0,0));
       options.physics.adjPuckTranslation(vec3(motion,0,0));
