@@ -19,17 +19,7 @@ void display_function( void )
          options.hud.draw_shape();
          break;
       
-      case 2:  // scoreboard
-         
-         /******************************************/
-         /*          Scoreboard Display            */
-         /******************************************/
-         
-         glClearColor( 1.0, 1.0, 1.0, 1.0 );
-         options.scoreboard.draw_shape();
-         
-         break;
-      case 3:  // win!
+      case 2:  // win!
          glClearColor( 1.0, 1.0, 1.0, 1.0 );
          options.winner->draw_shape();
    }

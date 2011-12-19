@@ -56,6 +56,17 @@ void timerHandle( int state ){
          options.physics.setPuckTranslation(vec3(0.3,0.0, 0.1));
          options.puck->set_translation(options.physics.getPuckTranslation());
          options.view_mode = 0;
+
+         //check for ending condition
+         if( options.hud.get_turns() < 0 ){
+   
+            options.winner->rebind(options.hud.get_score());
+
+            options.view_mode = 2;
+            options.hud.reset_turns( );
+            options.hud.reset_score( );
+
+         }
       }
    }
 

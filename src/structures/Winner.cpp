@@ -103,76 +103,58 @@ unsigned char* Winner::read_image(char* fname)
 /*****************************************/
 /*             Constructors              */
 /*****************************************/
-Winner::Winner( ){
-
-
-}
-
-Winner::~Winner( ){
-
-   make_empty();
-
-}
-
-void Winner::make_empty(){
-   if( points_main != NULL )
-      delete [] points_main;
-   if( tex_coords_main != NULL )
-      delete [] tex_coords_main;
-   if( points_p != NULL )
-      delete [] points_p;
-   if( tex_coords_p != NULL )
-      delete [] tex_coords_p;
-}
-
-
-void Winner::init( const GLuint& prog, bool const& winner ){
+Winner::Winner( const int sc, const string nm, const GLuint& prog ){
    
+   string score; 
+   stringstream sin;
+   sin << sc;
+   sin >> score;
+
    // Load shaders and use the resulting shader program
    program = prog;
-   
+
    //read image from file
    img_data = read_image( "data/characters_flip.ppm" );
-   
+
    /*********************************/
    /*       High Score Banner       */
    /*********************************/
    //build points and tex_coords arrays
-   points_main = NULL;
-   tex_coords_main = NULL;
+   vec4* tv;
+   vec2* tt;
+   points_main.clear();
+   tex_coords_main.clear();
    vec4 tl_tex(-0.75, 0.9, 0, 1);
    vec4 br_tex( 0.75, 0.5, 0, 1);
-   build_texture_values( tl_tex, br_tex, string("WINNER"), points_main, tex_coords_main, vex_size_main, tex_size_main);
+   build_texture_values( tl_tex, br_tex, string("Final Score for ")+nm, tv, tt, vex_size_main, tex_size_main);
 
    num_points_main = tex_size_main/sizeof(vec2);
-
-   /****************/
-   /*    PLAYER    */
-   /****************/
-   //build points and tex_coords arrays
-   points_p = NULL;
-   tex_coords_p = NULL;
-   tl_tex = vec4(-0.75, 0.0, 0, 1);
-   br_tex = vec4( 0.75,-0.4, 0, 1);
-   if( winner == false )
-      build_texture_values( tl_tex, br_tex, string("PLAYER 1"), points_p, tex_coords_p, vex_size_p, tex_size_p);
-   else
-      build_texture_values( tl_tex, br_tex, string("PLAYER 2"), points_p, tex_coords_p, vex_size_p, tex_size_p);
-
-   num_points_p = tex_size_p/sizeof(vec2);
+   for(size_t i=0; i<num_points_main; i++){
+      points_main.push_back( tv[i] );
+      tex_coords_main.push_back( tt[i] );
+   }
+   delete [] tt;
+   delete [] tv;
 
    /*****************/
    /*    PLAYER 2   */
    /*****************/
    //build points and tex_coords arrays
-   points_p2 = NULL;
-   tex_coords_p2 = NULL;
+   points_p2.clear();
+   tex_coords_p2.clear();
    tl_tex = vec4(-0.75,-0.5, 0, 1);
    br_tex = vec4( 0.75,-0.7, 0, 1);
-   build_texture_values( tl_tex, br_tex, string("PRESS ANY KEY TO CONTINUE"), points_p2, tex_coords_p2, vex_size_p2, tex_size_p2);
+   build_texture_values( tl_tex, br_tex, string("PRESS ANY KEY TO CONTINUE"), tv, tt, vex_size_p2, tex_size_p2);
 
    num_points_p2 = tex_size_p2/sizeof(vec2); 
+   for(size_t i=0; i<num_points_p2; i++){
+      points_p2.push_back( tv[i] );
+      tex_coords_p2.push_back( tt[i] );
+   }
+   delete [] tt;
+   delete [] tv;
 
+   
    /*****************/
 
    // Initialize texture objects
@@ -208,46 +190,90 @@ void Winner::init( const GLuint& prog, bool const& winner ){
    glBindVertexArray( vao );
 #endif
 
-   // Create and initialize a buffer object
    glGenBuffers( 1, &buffer );
+
+
+   /*   BIND SCORE DATA */
+   rebind( sc );
+
+
+}
+
+void Winner::rebind( const int sc ){
+
+   string score = ""; 
+   stringstream sin;
+   sin << sc;
+   sin >> score;
+   sin.clear();
+
+   /****************/
+   /*    PLAYER    */
+   /****************/
+   vec4* tv;
+   vec2* tt;
+   vec4 tl_tex;
+   vec4 br_tex;
+
+   //build points and tex_coords arrays
+   points_p.clear();
+   tex_coords_p.clear();
+   tl_tex = vec4(-0.75, 0.0, 0, 1);
+   br_tex = vec4( 0.75,-0.4, 0, 1);
+   build_texture_values( tl_tex, br_tex, score, tv, tt, vex_size_p, tex_size_p);
+
+   num_points_p = tex_size_p/sizeof(vec2);
+   for(size_t i=0; i<num_points_p; i++){
+      points_p.push_back( tv[i] );
+      tex_coords_p.push_back( tt[i] );
+   }
+   delete [] tt;
+   delete [] tv;
+
+
+
+
+   // Create and initialize a buffer object
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
-   glBufferData( GL_ARRAY_BUFFER, vex_size_main + vex_size_p + vex_size_p2 + 
-                                  tex_size_main + tex_size_p + tex_size_p2 , NULL, GL_STATIC_DRAW );
+   glBufferData( GL_ARRAY_BUFFER, /*vex_size_main + vex_size_p2 +*/ vex_size_p 
+         + /*tex_size_main + */tex_size_p /*+ tex_size_p2*/, 
+         NULL, GL_STATIC_DRAW);//+ tex_size_p +
 
    // Specify an offset to keep track of where we're placing data in our
    //   vertex array buffer.  We'll use the same technique when we
    //   associate the offsets with vertex attribute pointers.
    GLintptr offset = 0;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_main, points_main );
-   offset += vex_size_main;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p, points_p );
+   //glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_main, &points_main[0] );
+   //offset += vex_size_main;
+   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p, &points_p[0] );
    offset += vex_size_p;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2, points_p2 );
-   offset += vex_size_p2;
 
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_main, tex_coords_main );
-   offset += tex_size_main;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p, tex_coords_p );
+   //glBufferSubData( GL_ARRAY_BUFFER, offset, vex_size_p2, &points_p2[0] );
+   //offset += vex_size_p2;
+
+   /*
+      glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_main, &tex_coords_main[0] );
+      offset += tex_size_main;
+    */
+   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p, &tex_coords_p[0] );
    offset += tex_size_p;
-   glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2, tex_coords_p2 );
+   //glBufferSubData( GL_ARRAY_BUFFER, offset, tex_size_p2, &tex_coords_p2[0] );
 
    // set up vertex arrays
    offset = 0;
    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
    glEnableVertexAttribArray( vPosition );
    glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset) );
-   offset += vex_size_main + vex_size_p + vex_size_p2;
+   offset += /*vex_size_main + vex_size_p2 +*/ vex_size_p;
 
    GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" );
    glEnableVertexAttribArray( vTexCoord );
    glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset) );
 
-   drawmode = glGetUniformLocation( program, "drawmode");
-
 }
 
 void Winner::draw_shape(  ){
-   
+
 #ifdef __APPLE__
    glBindVertexArrayAPPLE( vao );
 #else
@@ -258,7 +284,7 @@ void Winner::draw_shape(  ){
 
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
    glBindTexture( GL_TEXTURE_2D, texture );
-   glDrawArrays( GL_TRIANGLES, 0, num_points_main + num_points_p + num_points_p2);
+   glDrawArrays( GL_TRIANGLES, 0, points_p.size());//num_points_main + num_points_p2 + num_points_p);
 
 
 }

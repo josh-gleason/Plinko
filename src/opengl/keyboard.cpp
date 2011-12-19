@@ -15,6 +15,8 @@ struct CameraAction
       moveStraight(0),
       moveHoriz(0),
       moveVert(0),
+      puckLeft(0),
+      puckRight(0),
       keysPressed(0) {}
 
    int rotateStraight;
@@ -23,6 +25,8 @@ struct CameraAction
    int moveStraight;
    int moveHoriz;
    int moveVert;
+   int puckLeft;
+   int puckRight;
 
    // number of (meaningful) keys currently held down
    int keysPressed;
@@ -70,6 +74,26 @@ void cameraTimer(int value)
       options.camera.moveHoriz(action.moveHoriz*options.cam_moveStep);
    if ( action.moveVert != 0 )
       options.camera.moveVert(action.moveVert*options.cam_moveStep);
+   if ( action.puckLeft != 0 ){
+      options.physics.adjPuckTranslation(vec3(-0.01,0,0));
+      options.puck->adjust_translation(vec3(-0.01,0,0));
+   }
+   if ( action.puckRight != 0 ){
+      options.physics.adjPuckTranslation(vec3(0.01,0,0));
+      options.puck->adjust_translation(vec3(0.01,0,0));
+   }
+
+   vec3 pos = options.physics.getPuckTranslation();
+   
+   double ran = 1.6;
+   if( pos.x > ran ){
+      options.physics.setPuckTranslation( vec3(ran, pos.y, pos.z));
+      options.puck->set_translation( vec3( ran, pos.y, pos.z ) );
+   }
+   if( pos.x < -ran ){
+      options.physics.setPuckTranslation( vec3(-ran, pos.y, pos.z));
+      options.puck->set_translation( vec3( -ran, pos.y, pos.z ) );
+   }
 
    if ( action.keysPressed > 0 )
       glutTimerFunc(options.cam_timerStep, cameraTimer, value);
@@ -87,7 +111,6 @@ void keyboardPress( unsigned char key, int x, int y ){
    
    if( options.view_mode == 2 ){
       options.view_mode = 0;
-      delete options.winner;
    }
 
    switch( key ){
@@ -96,11 +119,12 @@ void keyboardPress( unsigned char key, int x, int y ){
       /*       Change the view mode     */
       /**********************************/
       case '8':
-         options.view_mode = (options.view_mode + 1)%2;
+         if( options.view_mode == 0 )
+            options.view_mode = 1;
          break;
-      /********************************/
-      /*         Light Actions        */
-      /********************************/
+         /********************************/
+         /*         Light Actions        */
+         /********************************/
       case 'n': //move light -z
          laction.move_z--;
          laction.keysPressed++;
@@ -122,9 +146,23 @@ void keyboardPress( unsigned char key, int x, int y ){
          lightKeyPressed = true;
          break;
       
-      /********************************/
-      /*        Camera Actions        */
-      /********************************/
+      /*************************/
+      /*      Puck Motion      */
+      /*************************/
+      case '[': //move
+         action.puckLeft++;
+         action.keysPressed++;
+         cameraKeyPressed = true;
+         break;
+      case ']': //move 
+         action.puckRight++;
+         action.keysPressed++;
+         cameraKeyPressed = true;
+         break;
+
+         /********************************/
+         /*        Camera Actions        */
+         /********************************/
       case 'w':
          action.moveStraight++;
          action.keysPressed++;
@@ -185,9 +223,9 @@ void keyboardPress( unsigned char key, int x, int y ){
          action.keysPressed++;
          cameraKeyPressed = true;
          break;
-      /**********************/
-      /*    Quit Program    */
-      /**********************/
+         /**********************/
+         /*    Quit Program    */
+         /**********************/
       case 033: //escape key
          // TODO: this function is broken b/c there is only 1 player
          //options.scoreboard.win_count( options.p1_wins, options.p2_wins);
@@ -204,14 +242,23 @@ void keyboardPress( unsigned char key, int x, int y ){
       if ( laction.keysPressed == 1 )
          glutTimerFunc(options.light_timerStep, lightTimer, 0);
    }
-   
+
 }
 
 void keyboardUp( unsigned char key, int x, int y )
 {
    /** Process for the key */
    switch( key ){
-      
+
+      case '[':
+         action.puckLeft--;
+         action.keysPressed = 0;
+         break;
+      case ']':
+         action.puckRight--;
+         action.keysPressed= 0;
+         break;
+
       /********************************/
       /*         Light Actions        */
       /********************************/
@@ -231,9 +278,9 @@ void keyboardUp( unsigned char key, int x, int y )
          laction.move_x--;
          laction.keysPressed--;
          break;
-      /********************************/
-      /*        Camera Actions        */
-      /********************************/
+         /********************************/
+         /*        Camera Actions        */
+         /********************************/
       case 'w':
          action.moveStraight--;
          action.keysPressed--;
@@ -282,10 +329,10 @@ void keyboardUp( unsigned char key, int x, int y )
          action.rotateStraight--;
          action.keysPressed--;
          break;
-         
-      /**********************/
-      /*    Quit Program    */
-      /**********************/
+
+         /**********************/
+         /*    Quit Program    */
+         /**********************/
       case 033: //escape key
          exit( EXIT_SUCCESS );
    }

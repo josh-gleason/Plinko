@@ -104,6 +104,7 @@ void init( int& argc, char** argv )
    options.puck->init_buffers( options.light.m_position, options.light.m_ambient, options.light.m_diffuse, options.light.m_specular );
 
    // set initial object positions
+   options.winner = new Winner( options.hud.get_score(), options.name, options.program);
    // XXX not needed
 
    /*********************************************/
@@ -115,14 +116,14 @@ void init( int& argc, char** argv )
 
    // TODO There should be only 1 player
    options.hud.init( options.program, options.name );
-	
+
    /*********************************************/
    /*               Physics Engine              */
    /*********************************************/
-   
+
    // initialize physics engine
    options.physics.init( options.board->get_vertices(), options.board->num_verts() );
-   
+
    /*********************************************/
    /*              Finish GLUT init             */
    /*********************************************/
@@ -150,21 +151,21 @@ int main( int argc, char **argv )
    srand(time(0));
    parse_arguements( argc, argv, options );
    init( argc, argv );
-   
+
    cout << "================ Camera Controls ================" << endl
-        << "============ (w,a,s,d,q,e) movement =============" << endl
-        << " w - Move Forward          s - Move Backwards    " << endl
-        << " a - Move Left             d - Move Right        " << endl
-        << " q - Move Up               e - Move Down         " << endl
-        << "============== (u,h,j,k,y,i) look ===============" << endl
-        << " i - Look Up               k - Look Down         " << endl
-        << " j - Look Left             l - Look Right        " << endl
-        << "== Twist works only if camera is in free mode ===" << endl
-        << " u - Twist CCW             o - Twist CW          " << endl
-        << "=================== lighting model ==============" << endl 
-        << " n - move light -z axis   m - move light +z axis " << endl
-        << " , - move light -x axis   . - move light +x axis " << endl
-        << "=================================================" << endl << endl;
+      << "============ (w,a,s,d,q,e) movement =============" << endl
+      << " w - Move Forward          s - Move Backwards    " << endl
+      << " a - Move Left             d - Move Right        " << endl
+      << " q - Move Up               e - Move Down         " << endl
+      << "============== (u,h,j,k,y,i) look ===============" << endl
+      << " i - Look Up               k - Look Down         " << endl
+      << " j - Look Left             l - Look Right        " << endl
+      << "== Twist works only if camera is in free mode ===" << endl
+      << " u - Twist CCW             o - Twist CW          " << endl
+      << "=================== lighting model ==============" << endl 
+      << " n - move light -z axis   m - move light +z axis " << endl
+      << " , - move light -x axis   . - move light +x axis " << endl
+      << "=================================================" << endl << endl;
 
    glutMainLoop();
    return 0;

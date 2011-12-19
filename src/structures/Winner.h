@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -15,13 +16,10 @@ class Winner{
 
    public:
 
-      Winner( );
-      ~Winner( );
+      Winner( const int sc, const string nm, const GLuint& prog );
+
+      void rebind( const int sc );
       
-      void make_empty();
-
-      void init( GLuint const& prog, const bool& winner );
-
       void draw_shape( );
 
    private:
@@ -44,20 +42,20 @@ class Winner{
       GLuint num_points_main;
       GLuint vex_size_main;      //size of vertex array (BANNER ONLY)
       GLuint tex_size_main;      //size of texture array (BANNER ONLY) 
-      vec4 * points_main;        //list of vertices (BANNER ONLY)
-      vec2 * tex_coords_main;    //list of texture coordinates (BANNER ONLY)
+      vector<vec4> points_main;        //list of vertices (BANNER ONLY)
+      vector<vec2> tex_coords_main;    //list of texture coordinates (BANNER ONLY)
       
       GLuint num_points_p;
       GLuint vex_size_p;      //size of vertex array (PLAYER 1)
       GLuint tex_size_p;      //size of texture array (PLAYER 1) 
-      vec4 * points_p;        //list of vertices (PLAYER 1)
-      vec2 * tex_coords_p;    //list of texture coordinates (PLAYER 1)
+      vector<vec4> points_p;        //list of vertices (PLAYER 1)
+      vector<vec2> tex_coords_p;    //list of texture coordinates (PLAYER 1)
       
       GLuint num_points_p2;
       GLuint vex_size_p2;      //size of vertex array (PLAYER 1)
       GLuint tex_size_p2;      //size of texture array (PLAYER 1) 
-      vec4 * points_p2;        //list of vertices (PLAYER 1)
-      vec2 * tex_coords_p2;    //list of texture coordinates (PLAYER 1)
+      vector<vec4> points_p2;        //list of vertices (PLAYER 1)
+      vector<vec2> tex_coords_p2;    //list of texture coordinates (PLAYER 1)
       
       
       int img_rows;

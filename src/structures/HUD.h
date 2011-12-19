@@ -12,6 +12,7 @@
 
 using namespace std;
 
+#define MAX_TURNS 1
 
 class HUD{
 
@@ -29,6 +30,9 @@ class HUD{
       void decrement_turns( const int& amt = 1);
       void reset_turns();
       void reset_score();
+
+      int get_turns( )const;
+      int get_score( )const;
 
    private:
 
@@ -69,6 +73,8 @@ class HUD{
       vector<vec4> points_turns;
       vector<vec2> texture_turns;
       
+      double end1, end2, end3;
+
       GLfloat z_dist;
       float z_trans;
 

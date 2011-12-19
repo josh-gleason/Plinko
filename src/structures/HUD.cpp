@@ -108,12 +108,11 @@ unsigned char* HUD::read_image(char* fname)
 HUD::HUD( ){
    
    player_score = 0;
-   player_turns = 5;
+   player_turns = MAX_TURNS;
 }
 
 void HUD::init( const GLuint& prog, const string& pname){
    
-   cout << "Start init" << endl;
    vec4 tl_tex;
    vec4 br_tex;
 
@@ -126,13 +125,14 @@ void HUD::init( const GLuint& prog, const string& pname){
    //create names
    player_name = pname;
    
-   cout << "Start of name" << endl;
    //build points and tex_coords arrays
    points_name.clear();
    texture_name.clear();
 
    tl_tex = vec4(-0.99, 0.99, 0, 1);
    br_tex = vec4(-0.60, 0.95, 0, 1);
+   end1 = -0.6;
+
    vec2* tt;
    vec4* tv;
    build_texture_values( tl_tex, br_tex, string(player_name + string("   ")), tv, tt, vex_size, tex_size);
@@ -187,7 +187,6 @@ void HUD::init( const GLuint& prog, const string& pname){
 
    rebind_data();
 
-   cout << "End init" << endl;
 }
 
 
@@ -209,8 +208,10 @@ void HUD::rebind_data( ){
    points_score.clear();
    texture_score.clear();
 
-   tl_tex = vec4(-0.60, 0.99, 0, 1);
-   br_tex = vec4(-0.50, 0.95, 0, 1);
+   end2 = end1 + .1*ps.size();
+   tl_tex = vec4(end1, 0.99, 0, 1);
+   br_tex = vec4(end2, 0.95, 0, 1);
+
    build_texture_values( tl_tex, br_tex, string(ps), tv, tt, vex_size_score, tex_size_score);
 
    for(size_t i=0; i<num_points; i++){
@@ -233,8 +234,8 @@ void HUD::rebind_data( ){
    points_turns.clear();
    texture_turns.clear();
 
-   tl_tex = vec4(-0.45, 0.99, 0, 1);
-   br_tex = vec4(-0.35, 0.95, 0, 1);
+   tl_tex = vec4(end2 + 0.05, 0.99, 0, 1);
+   br_tex = vec4(end2 + 0.15, 0.95, 0, 1);
    build_texture_values( tl_tex, br_tex, string(pt), tv, tt, vex_size_turns, tex_size_turns);
 
    for(size_t i=0; i<num_points; i++){
@@ -281,7 +282,6 @@ void HUD::rebind_data( ){
 
    drawmode = glGetUniformLocation( program, "drawmode");
 
-   cout << "end rebind" << endl;
 }
 
 void HUD::draw_shape(  ){
@@ -293,11 +293,11 @@ void HUD::draw_shape(  ){
 #endif
 
    glUniform1i( drawmode, 2 );
-
+   
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
    glBindTexture( GL_TEXTURE_2D, texture );
    glDrawArrays( GL_TRIANGLES, 0, num_points + num_points_score + num_points_turns);
-
+   
 
 }
 
@@ -393,11 +393,19 @@ void HUD::decrement_turns( const int& amt ){
 }
 
 void HUD::reset_turns(){
-   player_turns = 5;
+   player_turns = MAX_TURNS;
    rebind_data();
 }
 
 void HUD::reset_score(){
    player_score = 0;
    rebind_data();
+}
+
+int HUD::get_turns( )const{
+   return player_turns;
+}
+
+int HUD::get_score( )const{
+   return player_score;
 }
