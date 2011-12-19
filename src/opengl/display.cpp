@@ -17,6 +17,7 @@ void display_function( void )
          options.puck->draw_shape( options.camera.getTransform(), options.projectionMatrix, options.light.m_position);
 
          options.hud.draw_shape();
+         options.tex.draw_shape();
          break;
       
       case 2:  // win!

@@ -106,6 +106,8 @@ void init( int& argc, char** argv )
    // set initial object positions
    options.winner = new Winner( options.hud.get_score(), options.name, options.program);
    // XXX not needed
+   
+   options.tex.init( options.program );
 
    /*********************************************/
    /*               Texture Mapping             */

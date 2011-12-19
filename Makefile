@@ -38,6 +38,7 @@ OBJECT_NAMES  = $(CORE)/parser \
                 $(STRUCTURES)/Physics \
                 $(STRUCTURES)/Scoreboard \
                 $(STRUCTURES)/HUD \
+					 $(STRUCTURES)/textures \
                 $(STRUCTURES)/Winner \
                 $(MATH)/triangulation \
                 $(OPENGL)/display \

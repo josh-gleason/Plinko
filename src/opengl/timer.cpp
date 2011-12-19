@@ -39,9 +39,9 @@ void timerHandle( int state ){
          //compute money won, 
          double amt;
          double xpos = options.physics.getPuckTranslation().x;
-         if( fabs(xpos) < 0.5 ) //$10,000
+         if( fabs(xpos) < 0.25 ) //$10,000
             amt = 10000;
-         else if( fabs(xpos) < 1.0 ) // $0
+         else if( fabs(xpos) < 0.75 ) // $0
             amt = 0;
          else if( fabs(xpos) < 1.5 ) // $1000
             amt = 1000;

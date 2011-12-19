@@ -48,6 +48,9 @@ void main()
    {
       gl_FragColor = diffuse;
    }
+   else if (drawmode == 3 ){
+      gl_FragColor = texture2D( texture, texCoord );
+   }
    else{
       gl_FragColor = texture2D( texture, texCoord );
 

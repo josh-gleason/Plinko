@@ -16,6 +16,7 @@
 #include <iostream>
 
 // ./
+#include "textures.h"
 #include "Object.h"
 #include "Camera.h"
 #include "Light.h"
@@ -119,6 +120,7 @@ class Parameters{
       HUD hud;
       Scoreboard scoreboard;
       Winner* winner;      // TODO I don't know what this is
+      TEX tex;
 
       /*************************************/
       /*          Physical World           */
