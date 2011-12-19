@@ -20,7 +20,7 @@ class TEX{
       
       void init( GLuint const& prog  );
 
-      void draw_shape( );
+      void draw_shape( mat4 const& worldviewMat, mat4 const& proj, vec4 const& l_pos );
 
    private:
       
@@ -36,6 +36,9 @@ class TEX{
       GLuint vTexCoord; 
       GLuint buffer;
       GLuint drawmode;
+      GLuint worldview;
+      GLuint projection;
+      GLuint light_position;
 
       GLuint texture;
 

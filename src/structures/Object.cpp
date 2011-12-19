@@ -125,12 +125,12 @@ void Object::init_buffers( const vec4& lpos, const vec4& l_amb, const vec4& l_di
    glVertexAttribPointer( vShiny, 1, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET((5*vertices_size)));
 
    // get ids of uniform variables
-   worldview = glGetUniformLocation( program, "worldview" );
-   projection = glGetUniformLocation( program, "projection" );
+   worldview = glGetUniformLocation(      program, "worldview" );
+   projection = glGetUniformLocation(     program, "projection" );
    light_position = glGetUniformLocation( program, "light_position");
-   drawmode = glGetUniformLocation( program, "drawmode");
+   drawmode = glGetUniformLocation(       program, "drawmode");
    translation_id = glGetUniformLocation( program, "translation");
-   rotation_id = glGetUniformLocation( program, "rotation" );
+   rotation_id = glGetUniformLocation(    program, "rotation" );
 
    translation = vec4(0,0,0,1);
 }

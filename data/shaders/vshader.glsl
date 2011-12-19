@@ -30,7 +30,7 @@ varying vec2 texCoord;
 
 void main() 
 {
-   if( drawmode != 2 ){
+   if( drawmode != 2 || drawmode != 3){
       // build the "model to world" transformation matrix (no rotation or scale right now)
       mat4 modelworld =
       mat4( 1.0, 0.0, 0.0, 0.0,
@@ -55,6 +55,21 @@ void main()
       // put vertex into view(or eye) then projection(clipping) coordinates
       gl_Position = projection * worldview * gl_Position;
    }
+   else if( drawmode == 3 ){
+      // build the "model to world" transformation matrix (no rotation or scale right now)
+      mat4 modelworld =
+      mat4( 1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+
+      // put vertex into world coordinates
+      gl_Position = modelworld * vPosition;
+
+      // put vertex into view(or eye) then projection(clipping) coordinates
+      gl_Position = projection * worldview * gl_Position;
+   }
+
    else{
       texCoord    = vTexCoord;
       gl_Position = vPosition;

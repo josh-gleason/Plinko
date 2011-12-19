@@ -129,12 +129,14 @@ void TEX::init( const GLuint& prog ){
    GLuint vTexCoord = glGetAttribLocation( program, "vTexCoord" );
    glEnableVertexAttribArray( vTexCoord );
    glVertexAttribPointer( vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(offset) );
-
-   drawmode = glGetUniformLocation( program, "drawmode");
+   
+   worldview = glGetUniformLocation(      program, "worldview" );
+   projection = glGetUniformLocation(     program, "projection" );
 
 }
 
-void TEX::draw_shape(  ){
+   
+void TEX::draw_shape( mat4 const& worldviewMat, mat4 const& proj, vec4 const& l_pos ){
 
 #ifdef __APPLE__
    glBindVertexArrayAPPLE( vao );
@@ -144,6 +146,8 @@ void TEX::draw_shape(  ){
 
    glUniform1i( drawmode, 3 );
    
+   glUniformMatrix4fv( projection, 1, GL_TRUE, proj );
+   glUniformMatrix4fv( worldview, 1, GL_TRUE, worldviewMat);
    glBindBuffer( GL_ARRAY_BUFFER, buffer );
    glBindTexture( GL_TEXTURE_2D, texture );
    glDrawArrays( GL_TRIANGLES, 0, num_points_banner);
